@@ -39,7 +39,7 @@ def GenerateConfig(context):
 
         for group in cluster['groups']:
             groupName = group['group']
-            outputName = naming.ExternalIpOutputName(clusterName, groupName)
+            outputName = naming.ExternalIpOutputName(context, clusterName, groupName)
 
             readActionName = naming.ExternalIpVariableReadActionName(context, clusterName, groupName)
 

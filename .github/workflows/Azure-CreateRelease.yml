@@ -1,0 +1,48 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Azure Release Workflow
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  release:
+    types: [created]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  azure-release:
+    if: "endsWith(github.event.release.tag_name, 'azure') || endsWith(github.event.release.tag_name, 'all')"
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Create Build Directory
+        run: mkdir ${GITHUB_WORKSPACE}/build
+      # Runs a set of commands using the runners shell
+      - name: Build CBS Packages
+        run: ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh
+      - name: Upload CBS BYOL Package
+        id: upload-cbs-byol-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-byol.zip
+          asset_name: azure-cbs-archive-byol.zip
+          asset_content_type: application/zip
+      - name: Upload CBS Hourly Package
+        id: upload-cbs-hourly-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-hourly-pricing.zip
+          asset_name: azure-cbs-archive-hourly-pricing.zip
+          asset_content_type: application/zip

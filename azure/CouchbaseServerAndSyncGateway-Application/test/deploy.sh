@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###############################################################################
 # Dependencies:                                                               #
@@ -27,7 +27,9 @@
 #     purpose: Specify the Hourly Template                                    #
 ###############################################################################
 
-TEMPLATE="../mainTemplate-byol_2019.json"
+SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
+
+TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-byol.json"
 
 while getopts l:p:g:n:h:b flag
 do
@@ -36,8 +38,8 @@ do
         p) PARAMETERS=${OPTARG};;
         g) RESOURCE_GROUP=${OPTARG};;
         n) NAME=${OPTARG};;
-        h) TEMPLATE="../mainTemplate-hourly_pricing_mar19.json";;
-        b) TEMPLATE="../mainTemplate-byol_2019.json";;
+        h) TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-hourly-pricing.json";;
+        b) TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-byol.json";;
         *) exit 1;;
     esac
 done

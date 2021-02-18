@@ -4,6 +4,11 @@ echo "Running server.sh"
 readonly DATA_MEM_PERCENT = 40
 readonly OTHER_SVCS_MEM_PERCENT = 8
 
+echo "Begin sleep for dpkg"
+sleep 30
+echo "end sleep"
+
+
 #######################################################
 ############ Turn Off Transparent Hugepages ###########
 #######################################################
@@ -13,7 +18,7 @@ echo "Turning off transparent hugepages..."
 echo "#!/bin/bash
 ### BEGIN INIT INFO
 # Provides:          disable-thp
-# Required-Start:    $local_fs
+# Required-Start:    
 # Required-Stop:
 # X-Start-Before:    couchbase-server
 # Default-Start:     2 3 4 5
@@ -26,8 +31,11 @@ echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
 " > /etc/init.d/disable-thp
 chmod 755 /etc/init.d/disable-thp
+echo "Starting dissable-thp"
 service disable-thp start
+echo "Disable thp Should be started"
 update-rc.d disable-thp defaults
+echo "updated update-rc.d"
 
 #######################################################
 ################# Set Swappiness to 0 #################
@@ -44,18 +52,79 @@ vm.swappiness = 0
 #######################################################
 ############### Install Couchbase Server ##############
 #######################################################
-
+FILE="/var/lib/dpkg/lock-frontend"
+DB="/var/lib/dpkg/lock"
+if [[ -f "$FILE" ]]; then
+  PID=$(lsof -t $FILE)
+  echo "lock-frontend locked by $PID"
+  echo "Killing $PID"
+  kill -9 "${PID##p}"
+  echo "$PID Killed"
+  rm $FILE
+  PID=$(lsof -t $DB)
+  echo "DB locked by $PID"
+  kill -9 "${PID##p}"
+  if ps -p "${PID##p}" > /dev/null
+  then
+    echo "${PID} was not successfully killed, Installation cannot continue"
+    exit 1
+  fi
+  rm $DB
+  dpkg --configure -a
+fi
 echo "Installing prerequisites..."
 apt-get update
-apt-get -y install python-httplib2
-apt-get -y install jq
-
+sleep 10
+FILE="/var/lib/dpkg/lock-frontend"
+DB="/var/lib/dpkg/lock"
+if [[ -f "$FILE" ]]; then
+  PID=$(lsof -t $FILE)
+  echo "lock-frontend locked by $PID"
+  echo "Killing $PID"
+  kill -9 "${PID##p}"
+  echo "$PID Killed"
+  rm $FILE
+  PID=$(lsof -t $DB)
+  echo "DB locked by $PID"
+  kill -9 "${PID##p}"
+  if ps -p "${PID##p}" > /dev/null
+  then
+    echo "${PID} was not successfully killed, Installation cannot continue"
+    exit 1
+  fi
+  rm $DB
+  dpkg --configure -a
+fi
+apt-get -y install python-httplib2 jq
+sleep 10
 echo "Installing Couchbase Server..."
-wget http://packages.couchbase.com/releases/${serverVersion}/couchbase-server-enterprise_${serverVersion}-ubuntu18.04_amd64.deb
+wget http://packages.couchbase.com/releases/${serverVersion}/couchbase-server-enterprise_${serverVersion}-ubuntu18.04_amd64.deb -q
+FILE="/var/lib/dpkg/lock-frontend"
+DB="/var/lib/dpkg/lock"
+if [[ -f "$FILE" ]]; then
+  PID=$(lsof -t $FILE)
+  echo "lock-frontend locked by $PID"
+  echo "Killing $PID"
+  kill -9 "${PID##p}"
+  echo "$PID Killed"
+  rm $FILE
+  PID=$(lsof -t $DB)
+  echo "DB locked by $PID"
+  kill -9 "${PID##p}"
+  if ps -p "${PID##p}" > /dev/null
+  then
+    echo "${PID} was not successfully killed, Installation cannot continue"
+    exit 1
+  fi
+  rm $DB
+  dpkg --configure -a
+fi
+echo "Download Complete.  Beginning unpacking"
 dpkg -i couchbase-server-enterprise_${serverVersion}-ubuntu18.04_amd64.deb
+echo "Unpacking complete.  Begin install"
 apt-get update
 apt-get -y install couchbase-server
-
+echo "Installation complete"
 #######################################################
 ############## Configure Couchbase Server #############
 #######################################################
@@ -147,8 +216,8 @@ echo "Running couchbase-cli node-init"
 ./couchbase-cli node-init \
   --cluster=$NODE_PRIVATE_DNS \
   --node-init-hostname=$NODE_PRIVATE_DNS \
-  -u=$couchbaseUsername \
-  -p=$couchbasePassword
+  --username=$couchbaseUsername \
+  --password=$couchbasePassword
 
 if [[ $rallyPrivateDNS == $NODE_PRIVATE_DNS ]]
 then
@@ -171,12 +240,21 @@ then
 else
   echo "Running couchbase-cli server-add"
   output=""
-  while [[ $output != "SUCCESS: Server added" && ! $output =~ "Node is already part of cluster." ]]
+  while [[ $output != "SUCCESS: Server added" && $output != *"Node is already part of cluster."* ]]
   do
+
+    echo "./couchbase-cli server-add \
+      --cluster=$rallyPrivateDNS \
+      --username=$couchbaseUsername \
+      --password=$couchbasePassword \
+      --server-add=$NODE_PRIVATE_DNS \
+      --server-add-username=$couchbaseUsername \
+      --server-add-password=$couchbasePassword \
+      --services=${services}"
     output=`./couchbase-cli server-add \
       --cluster=$rallyPrivateDNS \
-      -u=$couchbaseUsername \
-      -p=$couchbasePassword \
+      --username=$couchbaseUsername \
+      --password=$couchbasePassword \
       --server-add=$NODE_PRIVATE_DNS \
       --server-add-username=$couchbaseUsername \
       --server-add-password=$couchbasePassword \
@@ -187,12 +265,12 @@ else
 
   echo "Running couchbase-cli rebalance"
   output=""
-  while [[ ! $output =~ "SUCCESS" ]]
+  while [[ $output != *"SUCCESS"* ]]
   do
     output=`./couchbase-cli rebalance \
       --cluster=$rallyPrivateDNS \
-      -u=$couchbaseUsername \
-      -p=$couchbasePassword`
+      --username=$couchbaseUsername \
+      --password=$couchbasePassword`
     echo rebalance output \'$output\'
     sleep 10
   done

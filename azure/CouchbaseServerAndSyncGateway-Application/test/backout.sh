@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###############################################################################
 # Dependencies:                                                               #
@@ -20,6 +20,7 @@
 ###############################################################################
 #  WARNING;  THIS WILL DELETE ALL RESOURCES WITHIN A RESOURCE GROUP           #
 ###############################################################################
+SCRIPT_SOURCE=${BASH_SOURCE[0]/%backout.sh/}
 
 while getopts g:s flag
 do
@@ -36,7 +37,7 @@ echo "Save Resource Group: ${SAVE}"
 
 if [ "$SAVE" -eq "1" ]; then
     echo "Save was passed, deleting resources but leaving group."
-    az deployment group create --verbose --template-file ResourceGroupCleanup.template.json --resource-group $RESOURCE_GROUP --mode Complete
+    az deployment group create --verbose --template-file "${SCRIPT_SOURCE}/ResourceGroupCleanup.template.json" --resource-group $RESOURCE_GROUP --mode Complete
     exit 0
 fi
 

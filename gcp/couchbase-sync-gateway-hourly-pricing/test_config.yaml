@@ -4,3 +4,9 @@ imports:
 resources:
 - name: couchbase
   type: couchbase.py
+  properties:
+    couchbaseConnectionstring: "http://127.0.0.1:8091"
+    couchbaseUsername: "couchbase"
+    couchbasePassword: "foo123!"
+    couchbaseBucketName: "travel-sample"
+    syncGatewayVersion: "2.7.1"

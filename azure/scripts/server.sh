@@ -40,7 +40,9 @@ fi
 
 echo "Installing prerequisites..."
 apt-get update
+echo "Installing python-httplib2"
 apt-get -y install python-httplib2
+echo "Installing jq"
 apt-get -y install jq
 
 echo "Installing Couchbase Server..."

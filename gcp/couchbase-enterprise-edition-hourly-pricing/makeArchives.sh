@@ -1,32 +1,34 @@
 #!/bin/bash
 
+SCRIPT_SOURCE=${BASH_SOURCE[0]/%makeArchives.sh/}
+
 function makeArchive()
 {
   license=$1
-  mkdir -p ../../build/gcp/couchbase-enterprise-edition-hourly-pricing/
-  rm ../../build/gcp/couchbase-enterprise-edition-hourly-pricing/archive-${license}.zip
-  mkdir -p ../../build/tmp
+  dir=$2
+  mkdir -p "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package/"
+  rm "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/archive-${license}.zip"
 
 
-  cp couchbase-${license}.py ../../build/tmp/couchbase.py
-  cp couchbase.py.display ../../build/tmp
-  cp couchbase.py.schema ../../build/tmp
-  cp c2d_deployment_configuration.json ../../build/tmp
-  cp test_config.yaml ../../build/tmp
+  cp "${dir}couchbase.py" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package/couchbase.py"
+  cp "${dir}couchbase.py.display" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "${dir}couchbase.py.schema" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "${dir}c2d_deployment_configuration.json" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "${dir}test_config.yaml" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
 
-  cp ../shared/deployment.py ../../build/tmp
-  cp ../shared/cluster.py ../../build/tmp
-  cp ../shared/group.py ../../build/tmp
-  cp ../shared/naming.py ../../build/tmp
-  cp ../shared/startupCommon.sh ../../build/tmp
-  cp ../shared/server.sh ../../build/tmp
-  cp ../shared/syncGateway.sh ../../build/tmp
-  cp ../shared/successNotification.sh ../../build/tmp
+  cp "$dir../shared/deployment.py" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/cluster.py" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/group.py" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/naming.py" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/startupCommon.sh" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/server.sh" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/syncGateway.sh" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  cp "$dir../shared/successNotification.sh" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
 
-  cp -r resources ../../build/tmp
+  cp -r resources "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
 
-  zip -r -X ../../build/gcp/couchbase-enterprise-edition-hourly-pricing/archive-${license}.zip ../../build/tmp
-  rm -rf ../../build/tmp
+  zip -r -X "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/gcp-cbs-archive-${license}.zip" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  #rm -rf "$dir../../build/tmp"
 }
 
-makeArchive hourly-pricing
+makeArchive hourly-pricing "$SCRIPT_SOURCE"

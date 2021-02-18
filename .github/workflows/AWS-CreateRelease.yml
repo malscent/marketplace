@@ -1,0 +1,76 @@
+# This is a basic workflow to help you get started with Actions
+
+name: AWS Release Workflow
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  release:
+    types: [created]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  aws-release:
+    if: "endsWith(github.event.release.tag_name, 'aws') || endsWith(github.event.release.tag_name, 'all')"
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Create Build Directory
+        run: mkdir -p ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway
+      - name: Create Other Build Directory
+        run: mkdir -p ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway
+      - name: Copy CBS BYOL Template
+        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/couchbase-byol-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
+      - name: Copy CBS Hourly Template
+        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/couchbase-hourlypricing-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
+      - name: Copy SG BYOL Template
+        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseSyncGateway/couchbase-syncgateway-byol-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway/aws-sg-byol.template
+      - name: Copy SG Hourly Template
+        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseSyncGateway/couchbase-syncgateway-hourlypricing-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway/aws-sg-hourly-pricing.template
+      - name: Upload CBS BYOL Package
+        id: upload-cbs-byol-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
+          asset_name: aws-cbs-byol.template
+          asset_content_type: application/json
+      - name: Upload CBS Hourly Package
+        id: upload-cbs-hourly-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
+          asset_name: aws-cbs-hourly-pricing.template
+          asset_content_type: application/json
+      - name: Upload SG BYOL Package
+        id: upload-sg-byol-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/aws/CouchbaseSyncGateway/aws-sg-byol.template
+          asset_name: aws-sg-byol.template
+          asset_content_type: application/json
+      - name: Upload SG Hourly Package
+        id: upload-sg-hourly-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build/aws/CouchbaseSyncGateway/aws-sg-hourly-pricing.template
+          asset_name: aws-sg-hourly-pricing.template
+          asset_content_type: application/json
+        

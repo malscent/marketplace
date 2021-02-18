@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
 
+SCRIPT_SOURCE=${BASH_SOURCE[0]/%makeArchives.sh/}
+
 function makeArchive()
 {
   license=$1
-  mkdir -p ../../build/azure/CouchBaseServerAndSyncGateway/
-  rm ../../build/azure/CouchbaseServerAndSyncGateway/archive-${license}.zip
-  mkdir -p ../../build/tmp
+  dir=$2
+  mkdir -p "$dir../../build/azure/CouchBaseServerAndSyncGateway/"
+  rm "$dir../../build/azure/CouchbaseServerAndSyncGateway/azure-cbs-archive-${license}.zip"
+  mkdir -p "$dir../../build/tmp"
 
-  cp mainTemplate-${license}.json ../../build/tmp/mainTemplate.json
-  cp createUiDefinition.json ../../build/tmp
-  cp ../scripts/* ../../build/tmp
+  cp "$dir/mainTemplate-${license}.json" "$dir../../build/tmp/mainTemplate.json"
+  cp "$dir/createUiDefinition.json" "$dir../../build/tmp"
+  cp  -a "$dir../scripts/." "$dir../../build/tmp/"
 
-  cd ../../build/tmp || exit
-  zip -r -X ../azure/CouchBaseServerAndSyncGateway/archive-${license}.zip *
+  cd "$dir../../build/tmp" || exit
+  zip -r -X "$dir../../build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-${license}.zip" *
   cd - || exit
-  rm -rf ../../build/tmp
+  rm -rf "$dir../../build/tmp"
 }
 
-makeArchive byol_2019
-makeArchive hourly_pricing_mar19
+makeArchive byol "$SCRIPT_SOURCE"
+makeArchive hourly-pricing "$SCRIPT_SOURCE"

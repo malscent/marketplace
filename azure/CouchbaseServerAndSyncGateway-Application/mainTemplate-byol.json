@@ -32,7 +32,7 @@
     },
     "license": {
       "type": "string",
-      "defaultValue": "hourly_pricing_mar19"
+      "defaultValue": "byol_2019"
     },
     "_artifactsLocation": {
       "type": "string",
@@ -47,18 +47,66 @@
           "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated. Use the defaultValue if the staging location is not secured."
       },
       "defaultValue": ""
-    }
+   }
   },
+  "functions":[
+      {
+        "namespace": "couchbase",
+        "members": {
+            "generateResourceName": {
+                "parameters": [{
+                  "name": "resource",
+                  "type": "string"
+                }],
+                "output": {
+                  "type": "string",
+                  "value": "[
+                              concat(
+                                      'cb-', 
+                                      parameters('resource'),
+                                      '-', 
+                                      uniquestring(resourceGroup().id, deployment().name)
+                                    )
+                            ]"
+                }
+          }
+        }
+    }
+  ],
   "variables": {
     "uniqueString": "[uniquestring(resourceGroup().id, deployment().name)]",
-    "serverPubIP": "[concat(resourceGroup().id, '/providers/Microsoft.Compute/virtualMachineScaleSets/server/virtualMachines/0/networkInterfaces/nic/ipConfigurations/ipconfig/publicIPAddresses/public')]",
-    "syncPubIP": "[concat(resourceGroup().id, '/providers/Microsoft.Compute/virtualMachineScaleSets/syncgateway/virtualMachines/0/networkInterfaces/nic/ipConfigurations/ipconfig/publicIPAddresses/public')]"
+    "serverPubIP": "[
+                      concat(
+                        resourceGroup().id, 
+                        '/providers/Microsoft.Compute/virtualMachineScaleSets/',
+                        couchbase.generateResourceName('server'), 
+                        '/virtualMachines/0/networkInterfaces/',
+                        couchbase.generateResourceName('server-nic'),
+                        '/ipConfigurations/',
+                        couchbase.generateResourceName('server-ipconfig'),
+                        '/publicIPAddresses/',
+                        couchbase.generateResourceName('server-public-ip')
+                      )
+                    ]",
+    "syncPubIP": "[
+                    concat(
+                      resourceGroup().id, 
+                      '/providers/Microsoft.Compute/virtualMachineScaleSets/',
+                      couchbase.generateResourceName('syncgateway'),
+                      '/virtualMachines/0/networkInterfaces/',
+                      couchbase.generateResourceName('syncgateway-nic'),
+                      '/ipConfigurations/',
+                      couchbase.generateResourceName('syncgateway-ipconfig'), 
+                      '/publicIPAddresses/',
+                      couchbase.generateResourceName('syncgateway-public-ip')
+                    )
+                  ]"
   },
   "resources": [
     {
       "apiVersion": "2019-05-01",
       "type": "Microsoft.Resources/deployments",
-      "name": "pid-bac94ebc-cc78-4dbd-bc39-4b5433e1014c",
+      "name": "[couchbase.generateResourceName('pid')]",
       "properties": {
         "mode": "Incremental",
         "template": {
@@ -71,7 +119,7 @@
     {
       "apiVersion": "2019-11-01",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "networksecuritygroups",
+      "name": "[couchbase.generateResourceName('networkSecurityGroups')]",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": [
@@ -233,12 +281,12 @@
       }
     },
     {
-      "name": "vnet",
+      "name": "[couchbase.generateResourceName('vnet')]",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2019-04-01",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "Microsoft.Network/networkSecurityGroups/networksecuritygroups"
+        "[concat('Microsoft.Network/networkSecurityGroups/', couchbase.generateResourceName('networkSecurityGroups'))]"
       ],
       "properties": {
         "addressSpace": {
@@ -248,11 +296,11 @@
         },
         "subnets": [
           {
-            "name": "subnet",
+            "name": "[couchbase.generateResourceName('subnet')]",
             "properties": {
               "addressPrefix": "10.0.0.0/24",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'networksecuritygroups')]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', couchbase.generateResourceName('networkSecurityGroups'))]"
               }
             }
           }
@@ -261,11 +309,11 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "server",
+      "name": "[couchbase.generateResourceName('server')]",
       "location": "[parameters('location')]",
       "apiVersion": "2019-03-01",
       "dependsOn": [
-        "Microsoft.Network/virtualNetworks/vnet"
+        "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]"
       ],
       "plan": {
         "publisher": "couchbase",
@@ -306,25 +354,25 @@
             ]
           },
           "osProfile": {
-            "computerNamePrefix": "server",
+            "computerNamePrefix": "[couchbase.generateResourceName('server')]",
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]"
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [
               {
-                "name": "nic",
+                "name": "[couchbase.generateResourceName('server-nic')]",
                 "properties": {
                   "primary": true,
                   "ipConfigurations": [
                     {
-                      "name": "ipconfig",
+                      "name": "[couchbase.generateResourceName('server-ipconfig')]",
                       "properties": {
                         "subnet": {
-                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', 'vnet'), '/subnets/subnet')]"
+                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet')), '/subnets/', couchbase.generateResourceName('subnet'))]"
                         },
                         "publicipaddressconfiguration": {
-                          "name": "public",
+                          "name": "[couchbase.generateResourceName('server-public-ip')]",
                           "properties": {
                             "idleTimeoutInMinutes": 30,
                             "dnsSettings": {
@@ -342,7 +390,7 @@
           "extensionProfile": {
             "extensions": [
               {
-                "name": "extension",
+                "name": "[couchbase.generateResourceName('server-extension')]",
                 "properties": {
                   "publisher": "Microsoft.Azure.Extensions",
                   "type": "CustomScript",
@@ -355,7 +403,7 @@
                     ]
                   },
                   "protectedSettings": {
-                     "commandToExecute": "[concat('bash server.sh ', parameters('serverVersion'), ' ', parameters('adminUsername'), ' ', parameters('adminPassword'), ' ', variables('uniqueString'), ' ', parameters('location'))]"
+                      "commandToExecute": "[concat('bash server.sh ', parameters('serverVersion'), ' ', parameters('adminUsername'), ' ', parameters('adminPassword'), ' ', variables('uniqueString'), ' ', parameters('location'))]"
                   }
                 }
               }
@@ -366,11 +414,11 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "syncgateway",
+      "name": "[couchbase.generateResourceName('syncgateway')]",
       "location": "[parameters('location')]",
       "apiVersion": "2019-03-01",
       "dependsOn": [
-        "Microsoft.Network/virtualNetworks/vnet"
+        "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]"
       ],
       "plan": {
         "publisher": "couchbase",
@@ -400,25 +448,25 @@
             }
           },
           "osProfile": {
-            "computerNamePrefix": "syncgateway",
+            "computerNamePrefix": "[couchbase.generateResourceName('syncgateway')]",
             "adminUsername": "[parameters('adminUsername')]",
             "adminPassword": "[parameters('adminPassword')]"
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [
               {
-                "name": "nic",
+                "name": "[couchbase.generateResourceName('syncgateway-nic')]",
                 "properties": {
                   "primary": true,
                   "ipConfigurations": [
                     {
-                      "name": "ipconfig",
+                      "name": "[couchbase.generateResourceName('syncgateway-ipconfig')]",
                       "properties": {
                         "subnet": {
-                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', 'vnet'), '/subnets/subnet')]"
+                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet')), '/subnets/', couchbase.generateResourceName('subnet'))]"
                         },
                         "publicipaddressconfiguration": {
-                          "name": "public",
+                          "name": "[couchbase.generateResourceName('syncgateway-public-ip')]",
                           "properties": {
                             "idleTimeoutInMinutes": 30,
                             "dnsSettings": {
@@ -436,7 +484,7 @@
           "extensionProfile": {
             "extensions": [
               {
-                "name": "extension",
+                "name": "[couchbase.generateResourceName('syncgateway-extension')]",
                 "properties": {
                   "publisher": "Microsoft.Azure.Extensions",
                   "type": "CustomScript",
@@ -449,7 +497,7 @@
                     ]
                   },
                   "protectedSettings": {
-                    "commandToExecute": "[concat('bash syncGateway.sh ', parameters('syncGatewayVersion'))]"
+                      "commandToExecute": "[concat('bash syncGateway.sh ', parameters('syncGatewayVersion'))]"
                   }
                 }
               }

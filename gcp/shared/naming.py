@@ -1,9 +1,14 @@
 import re
+import random
+import string
 
 def _SanitizeDeploymentName(deploymentName):
     sanitizedName = '-'.join(deploymentName.split("-")[-2:])[-20:]
     if re.match('[0-9-].*', sanitizedName):
         sanitizedName = 'cb-' + sanitizedName[-17:]
+    random.seed(hash(sanitizedName))
+    randomString = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+    sanitizedName += '-' + randomString
     return sanitizedName
 
 def BaseDeploymentName(context):
@@ -30,8 +35,8 @@ def ExternalIpVariableReadActionName(context, clusterName, groupName):
     return '%s-%s-%s-ext-ip-read' % \
            (BaseDeploymentName(context), clusterName, groupName)
 
-def ExternalIpOutputName(clusterName, groupName):
-    return 'externalIp-%s-%s' % (clusterName, groupName)
+def ExternalIpOutputName(context, clusterName, groupName):
+    return '%s-externalIp-%s-%s' % (BaseDeploymentName(context), clusterName, groupName)
 
 def FirewallName(context):
     return '%s-firewall' % BaseDeploymentName(context)

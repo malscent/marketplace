@@ -38,7 +38,7 @@ def GenerateConfig(context):
     for cluster in clusters:
         clusterName = cluster['cluster']
         for group in cluster['groups']:
-            outputName = naming.ExternalIpOutputName(clusterName, group['group'])
+            outputName = naming.ExternalIpOutputName(context, clusterName, group['group'])
             config['outputs'].append({
                 'name': outputName,
                 'value': '$(ref.deployment.%s)' % outputName

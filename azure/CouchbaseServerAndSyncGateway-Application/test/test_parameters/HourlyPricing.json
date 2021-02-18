@@ -27,7 +27,7 @@
       "value": "eastus"
     },
     "license": {
-      "value": "byol_2019"
+      "value": "hourly_pricing_mar19"
     },
     "_artifactsLocation": {
       "value": "https://raw.githubusercontent.com/malscent/marketplace/main/azure/scripts/"
