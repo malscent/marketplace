@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 echo "Running server.sh"
+#dkpg lock issues
+sleep 30
 
 version=$1
 adminUsername=$2
@@ -16,6 +18,11 @@ echo adminPassword \'$adminPassword\'
 echo uniqueString \'$uniqueString\'
 echo location \'$location\'
 
+echo "Downloading Installer Package"
+wget http://packages.couchbase.com/releases/${version}/couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb
+
+
+# this is a hack to unlock dpkg to make sure we can do our install
 FILE="/var/lib/dpkg/lock-frontend"
 DB="/var/lib/dpkg/lock"
 if [[ -f "$FILE" ]]; then
@@ -37,19 +44,12 @@ if [[ -f "$FILE" ]]; then
   dpkg --configure -a
 fi
 
-
-echo "Installing prerequisites..."
-apt-get update
-echo "Installing python-httplib2"
-apt-get -y install python-httplib2
-echo "Installing jq"
-apt-get -y install jq
-
-echo "Installing Couchbase Server..."
-wget http://packages.couchbase.com/releases/${version}/couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb
+echo "Unpacking Couchbase Server"
 dpkg -i couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb
-apt-get update
-apt-get -y install couchbase-server
+
+echo "Installing..."
+apt-get update && apt-get -y install python-httplib2 jq couchbase-server
+
 
 echo "Calling util.sh..."
 source util.sh

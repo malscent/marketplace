@@ -9,11 +9,6 @@ on:
     branches: [ main ]
     paths:
       - 'azure/CouchbaseServerAndSyncGateway-Application/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'azure/CouchbaseServerAndSyncGateway-Application/**'
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -42,9 +37,38 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/deploy.sh -l eastus -p ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/parameters.json -g ja-test-1 -n ga-cbs-sg-app
+            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/deploy.sh -l eastus -p ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/parameters.json -g cb-mkt-test-byol -n ga-cbs-sg-app
       - name: Teardown From Azure
         uses: azure/CLI@v1
         with:
           inlineScript: |
             ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/backout.sh -g cb-mkt-test-byol -s
+
+  AzureNoSyncGateway:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Azure Login
+        uses: azure/login@v1
+        with: 
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Echo $GITHUB_WORKSPACE
+        run: echo "$GITHUB_WORKSPACE"
+      # Runs a set of commands using the runners shell
+      - name: Deploy To Azure
+        timeout-minutes: 15
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/deploy.sh -l eastus -p ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/test_parameters/NoSyncGateway.json -g cbs-test-no-sync-gateway-byol -n ga-cbs-no-sg-app
+      - name: Teardown From Azure
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/backout.sh -g cbs-test-no-sync-gateway-byol -s
