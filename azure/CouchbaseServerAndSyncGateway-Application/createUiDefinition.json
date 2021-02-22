@@ -497,10 +497,14 @@
             "name": "syncGatewayVersion",
             "type": "Microsoft.Common.DropDown",
             "label": "Sync Gateway Version",
-            "defaultValue": "2.8.0",
+            "defaultValue": "2.8.1",
             "toolTip": "Sync Gateway Version",
             "constraints": {
               "allowedValues": [
+                {
+                  "label": "2.8.1",
+                  "value": "2.8.1"
+                },
                 {
                   "label": "2.8.0",
                   "value": "2.8.0"
