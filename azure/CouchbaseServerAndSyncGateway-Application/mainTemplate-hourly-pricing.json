@@ -89,17 +89,22 @@
                       )
                     ]",
     "syncPubIP": "[
-                    concat(
-                      resourceGroup().id, 
-                      '/providers/Microsoft.Compute/virtualMachineScaleSets/',
-                      couchbase.generateResourceName('syncgateway'),
-                      '/virtualMachines/0/networkInterfaces/',
-                      couchbase.generateResourceName('syncgateway-nic'),
-                      '/ipConfigurations/',
-                      couchbase.generateResourceName('syncgateway-ipconfig'), 
-                      '/publicIPAddresses/',
-                      couchbase.generateResourceName('syncgateway-public-ip')
+                    if(
+                      equals(parameters('syncGatewayNodeCount'), '0'),
+                       '', 
+                      concat(
+                        resourceGroup().id, 
+                        '/providers/Microsoft.Compute/virtualMachineScaleSets/',
+                        couchbase.generateResourceName('syncgateway'),
+                        '/virtualMachines/0/networkInterfaces/',
+                        couchbase.generateResourceName('syncgateway-nic'),
+                        '/ipConfigurations/',
+                        couchbase.generateResourceName('syncgateway-ipconfig'), 
+                        '/publicIPAddresses/',
+                        couchbase.generateResourceName('syncgateway-public-ip')
+                      )
                     )
+                    
                   ]"
   },
   "resources": [

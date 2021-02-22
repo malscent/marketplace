@@ -89,17 +89,22 @@
                       )
                     ]",
     "syncPubIP": "[
-                    concat(
-                      resourceGroup().id, 
-                      '/providers/Microsoft.Compute/virtualMachineScaleSets/',
-                      couchbase.generateResourceName('syncgateway'),
-                      '/virtualMachines/0/networkInterfaces/',
-                      couchbase.generateResourceName('syncgateway-nic'),
-                      '/ipConfigurations/',
-                      couchbase.generateResourceName('syncgateway-ipconfig'), 
-                      '/publicIPAddresses/',
-                      couchbase.generateResourceName('syncgateway-public-ip')
+                    if(
+                      equals(parameters('syncGatewayNodeCount'), 0),
+                       'n/a', 
+                      concat(
+                        resourceGroup().id, 
+                        '/providers/Microsoft.Compute/virtualMachineScaleSets/',
+                        couchbase.generateResourceName('syncgateway'),
+                        '/virtualMachines/0/networkInterfaces/',
+                        couchbase.generateResourceName('syncgateway-nic'),
+                        '/ipConfigurations/',
+                        couchbase.generateResourceName('syncgateway-ipconfig'), 
+                        '/publicIPAddresses/',
+                        couchbase.generateResourceName('syncgateway-public-ip')
+                      )
                     )
+                    
                   ]"
   },
   "resources": [
@@ -415,6 +420,7 @@
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[couchbase.generateResourceName('syncgateway')]",
+      "condition": "[not(equals(parameters('syncGatewayNodeCount'), 0))]",
       "location": "[parameters('location')]",
       "apiVersion": "2019-03-01",
       "dependsOn": [
@@ -514,7 +520,14 @@
     },
     "syncGatewayAdminURL": {
       "type": "string",
-      "value": "[concat('http://', reference(variables('syncPubIP'), '2017-03-30').dnsSettings.fqdn, ':4985/_admin/')]"
+      "value": "[
+        if(
+          not(
+            equals(parameters('syncGatewayNodeCount'), 0)
+            ),
+          concat('http://', reference(variables('syncPubIP'), '2017-03-30').dnsSettings.fqdn, ':4985/_admin/'), 
+          'n/a') 
+        ]"
     }
   }
 }

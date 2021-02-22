@@ -9,10 +9,6 @@ on:
     branches: [ main ]
     paths:
       - 'gcp/couchbase-sync-gateway-hourly-pricing/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'gcp/couchbase-sync-gateway-hourly-pricing/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
