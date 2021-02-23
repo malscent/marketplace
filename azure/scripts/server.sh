@@ -54,6 +54,15 @@ do
 done
 echo " done"
 
+echo "Updating package repositories"
+echo -n "Installing"
+until apt-get update; do
+  echo -n "."
+  sleep 2
+done
+echo " done"
+
+
 echo -n "Installing"
 until apt-get -y install python-httplib2 jq couchbase-server; do
   echo -n "."
