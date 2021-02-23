@@ -27,7 +27,7 @@ function makeArchive()
 
   cp -r resources "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
 
-  zip -r -X "$dir../../build/gcp/couchbase-sync-gateway-byol/gcp-sg-archive-${license}.zip" "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
+  zip -r -j -X "$dir../../build/gcp/couchbase-sync-gateway-byol/gcp-sg-archive-${license}.zip" "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
   #rm -rf "$dir../../build/tmp"
 }
 
