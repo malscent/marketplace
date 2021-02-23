@@ -21,30 +21,6 @@ echo location \'$location\'
 echo "Downloading Installer Package"
 wget http://packages.couchbase.com/releases/${version}/couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb
 
-
-# this is a hack to unlock dpkg to make sure we can do our install
-FILE="/var/lib/dpkg/lock-frontend"
-DB="/var/lib/dpkg/lock"
-if [[ -f "$FILE" ]]; then
-  PID=$(lsof -t $FILE)
-  echo "lock-frontend locked by $PID"
-  echo "Killing $PID"
-  kill -9 "${PID##p}"
-  echo "$PID Killed"
-  rm $FILE
-  PID=$(lsof -t $DB)
-  echo "DB locked by $PID"
-  kill -9 "${PID##p}"
-  if ps -p "${PID##p}" > /dev/null
-  then
-    __log_error "${PID} was not successfully killed, Installation cannot continue"
-    exit 1
-  fi
-  rm $DB
-  dpkg --configure -a
-fi
-
-
 echo -n "Unpacking Couchbase Server"
 
 until dpkg -i "couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb";
