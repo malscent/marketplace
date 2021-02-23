@@ -15,7 +15,7 @@ function makeArchive()
   cp  -a "$dir../scripts/." "$dir../../build/tmp/"
 
   cd "$dir../../build/tmp" || exit
-  zip -r -X "$dir../../build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-${license}.zip" *
+  zip -r -j -X "$dir../../build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-${license}.zip" *
   cd - || exit
   rm -rf "$dir../../build/tmp"
 }

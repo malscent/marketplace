@@ -27,7 +27,7 @@ function makeArchive()
 
   cp -r resources "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
 
-  zip -r -X "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/gcp-cbs-archive-${license}.zip" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
+  zip -r -j -X "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/gcp-cbs-archive-${license}.zip" "$dir../../build/gcp/couchbase-enterprise-edition-hourly-pricing/package"
   #rm -rf "$dir../../build/tmp"
 }
 
