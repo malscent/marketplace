@@ -44,11 +44,22 @@ if [[ -f "$FILE" ]]; then
   dpkg --configure -a
 fi
 
-echo "Unpacking Couchbase Server"
-dpkg -i couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb
 
-echo "Installing..."
-apt-get update && apt-get -y install python-httplib2 jq couchbase-server
+echo -n "Unpacking Couchbase Server"
+
+until dpkg -i "couchbase-server-enterprise_${version}-ubuntu18.04_amd64.deb";
+do
+  echo -n "."
+  sleep 2
+done
+echo " done"
+
+echo -n "Installing"
+until apt-get -y install python-httplib2 jq couchbase-server; do
+  echo -n "."
+  sleep 2
+done
+echo " done"
 
 
 echo "Calling util.sh..."
