@@ -37,8 +37,13 @@ echo "Save Resource Group: ${SAVE}"
 
 if [ "$SAVE" -eq "1" ]; then
     echo "Save was passed, deleting resources but leaving group."
-    az deployment group create --verbose --template-file "${SCRIPT_SOURCE}/ResourceGroupCleanup.template.json" --resource-group $RESOURCE_GROUP --mode Complete
+    az deployment group create --verbose --template-file "${SCRIPT_SOURCE}/ResourceGroupCleanup.template.json" --resource-group "$RESOURCE_GROUP" --mode Complete
+    echo "Deleting Deployments"
+    for row in $(az deployment group list -g "$RESOURCE_GROUP" | jq -r -c '.[] | .name');
+    do
+        az deployment group delete -g "$RESOURCE_GROUP" -n "$row"
+    done
     exit 0
 fi
 
-az group delete --name $RESOURCE_GROUP --yes
+az group delete --name "$RESOURCE_GROUP" --yes
