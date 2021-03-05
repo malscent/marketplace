@@ -30,7 +30,7 @@
       "value": "hourly_pricing_mar19"
     },
     "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/couchbase-partners/marketplace/main/azure/scripts/"
+      "value": "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.1/"
     },
     "_artifactsLocationSasToken": {
       "value": ""
