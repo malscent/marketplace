@@ -123,7 +123,7 @@ def GenerateInstanceTemplateConfig(context, runtimeconfigName):
                 }],
                 'metadata': {
                     'items': [
-                        { 'key': 'startup-script', 'value': GenerateStartupScript(context) },
+                        { 'key': 'startup-script', 'value': GenerateStartupScript(context, runtimeconfigName) },
                         { 'key': 'runtime-config-name', 'value': runtimeconfigName },
                         { 'key': 'external-ip-variable-path', 'value': _ExternalIpVariablePath(clusterName, groupName) },
                         { 'key': 'status-success-base-path', 'value': _WaiterSuccessPath(clusterName, groupName) },
@@ -199,40 +199,46 @@ def GenerateGroupWaiterConfig(context, runtimeconfigName, instanceGroupManagerNa
     }
     return groupWaiter
 
-def GenerateStartupScript(context):
-    script = '#!/usr/bin/env bash\n\n'
-    script += context.imports['startupCommon.sh']
-
-    # GCP is now running the startup script on reboot.  This is a workaround.
-    script += 'if [ -d "/opt/couchbase" ]; then\n'
-    script += '  echo "Couchbase Server is already installed.  Exiting"\n'
-    script += '  exit\n'
-    script += 'elif [ -d "/home/sync_gateway" ]; then\n'
-    script += '  echo "Sync Gateway is already installed.  Exiting."\n'
-    script += '  exit\n'
-    script += 'fi\n\n'
-
+def GenerateStartupScript(context, runtimeconfigName):
     services=context.properties['services']
-    if 'data' in services or 'query' in services or 'index' in services or 'fts' in services or 'eventing' in services or 'analytics' in services:
-        script += 'CLUSTER="' + context.properties['cluster'] + '"\n'
-        script += 'serverVersion="' + context.properties['serverVersion'] + '"\n'
-        script += 'couchbaseUsername="' + context.properties['couchbaseUsername'] + '"\n'
-        script += 'couchbasePassword="' + context.properties['couchbasePassword'] + '"\n'
-        script += 'nodeCount="' + str(context.properties['clusterNodesCount']) + '"\n'
+    version = context.properties['serverVersion'] if 'syncGateway' not in services else context.properties['syncGatewayVersion']
+    sg = '-g' if 'syncGateway' in services else ''
+    script = '''
+#!/usr/bin/env bash
 
-        servicesParameter=''
-        for service in services:
-            servicesParameter += service + ','
-        servicesParameter=servicesParameter[:-1]
+if [[ $(hostname) != *"syncgateway"* ]]; then
+    gcp_hostname=$(curl -H "Metadata-Flavor: Google" -s http://metadata/computeMetadata/v1/instance/hostname)
 
-        script += 'services="' + servicesParameter + '"\n\n'
-        script+= context.imports['server.sh']
+    if ! gcloud beta runtime-config configs variables set {cluster}/{dnsconfig} $gcp_hostname --config-name={config} --fail-if-present; then
+        CLUSTER_HOST=$(gcloud beta runtime-config configs variables get-value {cluster}/{dnsconfig} --config-name={config})
+    else
+        CLUSTER_HOST=$gcp_hostname
+    fi
+else
+    CLUSTER_HOST=$(gcloud beta runtime-config configs variables get-value {cluster}/{dnsconfig} --config-name={config})
+    until [[ ! -z "$CLUSTER_HOST" ]]; do
+        CLUSTER_HOST=$(gcloud beta runtime-config configs variables get-value {cluster}/{dnsconfig} --config-name={config})
+        sleep 1
+    done
+fi
+VERSION={version}
+USERNAME={username}
+PASSWORD={password}
+NODE_COUNT={node_count}
 
-    if 'syncGateway' in services:
-        script += 'syncGatewayVersion="' + context.properties['syncGatewayVersion'] + '"\n'
-        script += context.imports['syncGateway.sh']
+if [[ ! -e "couchbase_installer.sh" ]]; then
+    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.3/couchbase_installer.sh"
+fi
 
-    script += context.imports['successNotification.sh']
+bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os UBUNTU -e GCP -s -c -d -w $NODE_COUNT {sg}
+    '''.format(cluster=context.properties['cluster'], 
+               username=context.properties['couchbaseUsername'], 
+               password=context.properties['couchbasePassword'], 
+               dnsconfig='rallyPrivateDNS', 
+               config=runtimeconfigName, 
+               node_count=str(context.properties['clusterNodesCount']), 
+               version=version, 
+               sg=sg)
 
     return script
 

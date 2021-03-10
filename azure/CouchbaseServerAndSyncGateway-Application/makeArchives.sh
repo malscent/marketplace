@@ -12,7 +12,7 @@ function makeArchive()
 
   cp "$dir/mainTemplate-${license}.json" "$dir../../build/tmp/mainTemplate.json"
   cp "$dir/createUiDefinition.json" "$dir../../build/tmp"
-  curl -L "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.1/couchbase_installer.sh" -o "$dir../../build/tmp/couchbase_installer.sh"
+  curl -L "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.2/couchbase_installer.sh" -o "$dir../../build/tmp/couchbase_installer.sh"
 
   cd "$dir../../build/tmp" || exit
   zip -r -j -X "$dir../../build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-${license}.zip" *

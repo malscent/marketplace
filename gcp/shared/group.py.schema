@@ -1,9 +1,5 @@
 imports:
   - path: naming.py
-  - path: startupCommon.sh
-  - path: server.sh
-  - path: syncGateway.sh
-  - path: successNotification.sh
 
 required:
   - license
@@ -26,8 +22,9 @@ properties:
     description: Type of Couchbase license to be supported by the deployment.
   serverVersion:
     type: string
-    default: 6.6.0
+    default: 6.6.1
     enum:
+      - 6.6.1
       - 6.6.0
       - 6.5.1
       - 6.5.0
@@ -50,8 +47,10 @@ properties:
       - 5.0.0
   syncGatewayVersion:
     type: string
-    default: 2.7.3
+    default: 2.8.2
     enum:
+      - 2.8.2
+      - 2.8.0
       - 2.7.3
       - 2.7.2
       - 2.7.1

@@ -358,7 +358,7 @@
             "name": "syncGatewayNodeCount",
             "type": "Microsoft.Common.DropDown",
             "label": "Sync Gateway Node Count",
-            "defaultValue": "2",
+            "defaultValue": "0",
             "toolTip": "Number of virtual machines to provision for Sync Gateway cluster",
             "constraints": {
               "allowedValues": [
@@ -497,13 +497,13 @@
             "name": "syncGatewayVersion",
             "type": "Microsoft.Common.DropDown",
             "label": "Sync Gateway Version",
-            "defaultValue": "2.8.1",
+            "defaultValue": "2.8.2",
             "toolTip": "Sync Gateway Version",
             "constraints": {
               "allowedValues": [
                 {
-                  "label": "2.8.1",
-                  "value": "2.8.1"
+                  "label": "2.8.2",
+                  "value": "2.8.2"
                 },
                 {
                   "label": "2.8.0",
