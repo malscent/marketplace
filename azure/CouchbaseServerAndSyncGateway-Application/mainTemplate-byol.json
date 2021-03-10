@@ -403,12 +403,26 @@
                   "autoUpgradeMinorVersion": true,
                   "settings": {
                     "fileUris": [
-                      "[uri(parameters('_artifactsLocation'), concat('server.sh', parameters('_artifactsLocationSasToken')))]",
-                      "[uri(parameters('_artifactsLocation'), concat('util.sh', parameters('_artifactsLocationSasToken')))]"
+                      "[uri(parameters('_artifactsLocation'), concat('couchbase_installer.sh', parameters('_artifactsLocationSasToken')))]"
                     ]
                   },
                   "protectedSettings": {
-                      "commandToExecute": "[concat('bash server.sh ', parameters('serverVersion'), ' ', parameters('adminUsername'), ' ', parameters('adminPassword'), ' ', variables('uniqueString'), ' ', parameters('location'))]"
+                      "commandToExecute": "[
+                                             concat(
+                                              'bash couchbase_installer.sh -v ',
+                                              parameters('serverVersion'),
+                                              ' -u ',
+                                              parameters('adminUsername'),
+                                              ' -p ',
+                                              parameters('adminPassword'),
+                                              ' -ch ',
+                                              concat(
+                                                couchbase.generateResourceName('server'),
+                                                '000000'
+                                              ),
+                                              ' -os UBUNTU -c -e AZURE -d'
+                                            )
+                                          ]"
                   }
                 }
               }
@@ -498,12 +512,25 @@
                   "autoUpgradeMinorVersion": true,
                   "settings": {
                     "fileUris": [
-                      "[uri(parameters('_artifactsLocation'), concat('syncGateway.sh', parameters('_artifactsLocationSasToken')))]",
-                      "[uri(parameters('_artifactsLocation'), concat('util.sh', parameters('_artifactsLocationSasToken')))]"
+                      "[uri(parameters('_artifactsLocation'), concat('couchbase_installer.sh', parameters('_artifactsLocationSasToken')))]"
                     ]
                   },
                   "protectedSettings": {
-                      "commandToExecute": "[concat('bash syncGateway.sh ', parameters('syncGatewayVersion'))]"
+                      "commandToExecute": "[
+                                            concat(
+                                              'bash couchbase_installer.sh -v ',
+                                              parameters('syncGatewayVersion'),
+                                              ' -u ',
+                                              parameters('adminUsername'),
+                                              ' -p ',
+                                              parameters('adminPassword'),
+                                              ' -os UBUNTU -g -e AZURE -ch ',
+                                              concat(
+                                                couchbase.generateResourceName('server'),
+                                                '000000'
+                                              )
+                                            )
+                                          ]"
                   }
                 }
               }
