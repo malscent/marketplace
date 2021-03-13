@@ -3,10 +3,6 @@ imports:
   - path: cluster.py
   - path: group.py
   - path: naming.py
-  - path: startupCommon.sh
-  - path: server.sh
-  - path: syncGateway.sh
-  - path: successNotification.sh
 
 required:
   - serverNodeCount
@@ -106,9 +102,9 @@ properties:
     default: 20
   syncGatewayVersion:
     type: string
-    default: 2.8.1
+    default: 2.8.2
     enum:
-      - 2.8.1
+      - 2.8.2
       - 2.8.0
       - 2.7.3
       - 2.7.2

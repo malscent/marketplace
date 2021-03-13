@@ -20,10 +20,6 @@ function makeArchive()
   cp "$dir../shared/cluster.py" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
   cp "$dir../shared/group.py" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
   cp "$dir../shared/naming.py" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
-  cp "$dir../shared/startupCommon.sh" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
-  cp "$dir../shared/server.sh" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
-  cp "$dir../shared/syncGateway.sh" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
-  cp "$dir../shared/successNotification.sh" "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
 
   cp -r resources "$dir../../build/gcp/couchbase-sync-gateway-hourly-pricing/package"
 
