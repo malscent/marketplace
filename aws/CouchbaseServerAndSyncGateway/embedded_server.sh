@@ -73,4 +73,4 @@ if [[ ! -e "couchbase_installer.sh" ]]; then
     curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.4/couchbase_installer.sh"
 fi
 
-bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e OTHER -s -c -d
+bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d
