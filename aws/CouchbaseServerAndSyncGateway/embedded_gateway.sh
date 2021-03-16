@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 echo 'Running startup script...'
 
 #These values will be replaced with appropriate values during compilation into the Cloud Formation Template

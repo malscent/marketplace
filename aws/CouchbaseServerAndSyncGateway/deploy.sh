@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+set -eu
+
 SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
 bash "$SCRIPT_SOURCE/makeArchives.sh"
 STACK_NAME=$1

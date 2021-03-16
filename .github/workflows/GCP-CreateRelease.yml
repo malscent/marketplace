@@ -25,13 +25,13 @@ jobs:
         run: mkdir ${GITHUB_WORKSPACE}/build
       # Runs a set of commands using the runners shell
       - name: Build CBS BYOL Package
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/makeArchives.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/makeArchives.sh
       - name: Build CBS Hourly Package
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-hourly-pricing/makeArchives.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-hourly-pricing/makeArchives.sh
       - name: Build SG BYOL Package
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-sync-gateway-byol/makeArchives.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-sync-gateway-byol/makeArchives.sh
       - name: Build SG Hourly Package
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-sync-gateway-hourly-pricing/makeArchives.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-sync-gateway-hourly-pricing/makeArchives.sh
       - name: Upload CBS BYOL Package
         id: upload-cbs-byol-asset
         uses: actions/upload-release-asset@v1

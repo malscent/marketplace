@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 echo "Beginning"
 #These values will be replaced with appropriate values during compilation into the Cloud Formation Template
 #To run directly, simply set values prior to executing script.  Any variable with $__ prefix and __ suffix will

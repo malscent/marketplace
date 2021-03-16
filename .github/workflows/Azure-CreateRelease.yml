@@ -25,7 +25,7 @@ jobs:
         run: mkdir ${GITHUB_WORKSPACE}/build
       # Runs a set of commands using the runners shell
       - name: Build CBS Packages
-        run: ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh
+        run: bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh
       - name: Upload CBS BYOL Package
         id: upload-cbs-byol-asset
         uses: actions/upload-release-asset@v1
