@@ -21,18 +21,12 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Create Build Directory
-        run: mkdir -p ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway
-      - name: Create Other Build Directory
-        run: mkdir -p ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway
-      - name: Copy CBS BYOL Template
-        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/couchbase-byol-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
-      - name: Copy CBS Hourly Template
-        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/couchbase-hourlypricing-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
-      - name: Copy SG BYOL Template
-        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseSyncGateway/couchbase-syncgateway-byol-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway/aws-sg-byol.template
-      - name: Copy SG Hourly Template
-        run: cp ${GITHUB_WORKSPACE}/aws/CouchbaseSyncGateway/couchbase-syncgateway-hourlypricing-amzn-lnx2.template ${GITHUB_WORKSPACE}/build/aws/CouchbaseSyncGateway/aws-sg-hourly-pricing.template
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: '15.x'
+      - name: Build Templates
+        run: bash $GITHUB_WORKSPACE/aws/CouchbaseServerAndSyncGateway/makeArchives.sh
       - name: Upload CBS BYOL Package
         id: upload-cbs-byol-asset
         uses: actions/upload-release-asset@v1

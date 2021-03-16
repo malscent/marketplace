@@ -1,0 +1,93 @@
+{
+    "CouchbaseServer": {
+        "ap-northeast-1": {
+            "AMI": "ami-04fbb93f323b3ad84"
+        },
+        "ap-northeast-2": {
+            "AMI": "ami-0c8b7ee91124e9c2b"
+        },
+        "ap-south-1": {
+            "AMI": "ami-065d1a1771bb3a897"
+        },
+        "ap-southeast-1": {
+            "AMI": "ami-0f6ac431d430acae3"
+        },
+        "ap-southeast-2": {
+            "AMI": "ami-02e5a3ea4554a0295"
+        },
+        "ca-central-1": {
+            "AMI": "ami-00cb21b9848e977a5"
+        },
+        "eu-central-1": {
+            "AMI": "ami-04552799870482af3"
+        },
+        "eu-west-1": {
+            "AMI": "ami-04034e057050e1bb4"
+        },
+        "eu-west-2": {
+            "AMI": "ami-0ed864043543cfda8"
+        },
+        "eu-west-3": {
+            "AMI": "ami-0b7026377a8881250"
+        },
+        "sa-east-1": {
+            "AMI": "ami-060b577e8c0650f51"
+        },
+        "us-east-1": {
+            "AMI": "ami-0d3e108f16070ca60"
+        },
+        "us-east-2": {
+            "AMI": "ami-095bc61014d727e46"
+        },
+        "us-west-1": {
+            "AMI": "ami-0a3256d4a344412bb"
+        },
+        "us-west-2": {
+            "AMI": "ami-015db11f95c164e13"
+        }
+    },
+    "CouchbaseSyncGateway": {
+        "ap-northeast-1": {
+            "AMI": "ami-07d982ffa106f59a3"
+        },
+        "ap-northeast-2": {
+            "AMI": "ami-0dae8c09074e87fee"
+        },
+        "ap-south-1": {
+            "AMI": "ami-0c723d200acb42479"
+        },
+        "ap-southeast-1": {
+            "AMI": "ami-02212aa73bef0afe1"
+        },
+        "ap-southeast-2": {
+            "AMI": "ami-0973f3b647f4820d7"
+        },
+        "ca-central-1": {
+            "AMI": "ami-0f1d7ef2faed58108"
+        },
+        "eu-central-1": {
+            "AMI": "ami-082ad5e996ab14c5e"
+        },
+        "eu-west-1": {
+            "AMI": "ami-0bd743559d1ae9744"
+        },
+        "eu-west-2": {
+            "AMI": "ami-0a376fa1ef71f8305"
+        },
+        "sa-east-1": {
+            "AMI": "ami-01f91e48086035565"
+        },
+        "us-east-1": {
+            "AMI": "ami-09fdfb17cf362fc01"
+        },
+        "us-east-2": {
+            "AMI": "ami-09ae177b8bdddd332"
+        },
+        "us-west-1": {
+            "AMI": "ami-0c43758f2a30dfec1"
+        },
+        "us-west-2": {
+            "AMI": "ami-0decd93bea08de6fc"
+        }
+    }
+}

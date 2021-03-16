@@ -37,12 +37,12 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/deploy.sh -l eastus -p ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/parameters.json -g cb-mkt-test-byol -n ga-cbs-sg-app-byol
+            bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/deploy.sh -l eastus -p ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/parameters.json -g cb-mkt-test-byol -n ga-cbs-sg-app-byol
       - name: Teardown From Azure
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/backout.sh -g cb-mkt-test-byol -s
+            bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/test/backout.sh -g cb-mkt-test-byol -s
 
   AzureNoSyncGateway:
     # The type of runner that the job will run on

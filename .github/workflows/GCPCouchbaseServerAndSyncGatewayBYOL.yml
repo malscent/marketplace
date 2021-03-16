@@ -37,6 +37,6 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Deploy To GCP
         timeout-minutes: 15
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/deploy.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/deploy.sh
       - name: Teardown From GCP
-        run: ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/backout.sh
+        run: bash ${GITHUB_WORKSPACE}/gcp/couchbase-enterprise-edition-byol/backout.sh

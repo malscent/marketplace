@@ -30,7 +30,7 @@ jobs:
       - name: Deploy To AWS
         timeout-minutes: 15
         run: |
-            ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/deploy.sh aws-cb-sg-mp-hourly hourlypricing
+            bash ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/deploy.sh aws-cb-sg-mp-hourly hourlypricing
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -39,7 +39,7 @@ jobs:
       - name: Teardown From AWS
         timeout-minutes: 15
         run: |
-            ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/backout.sh aws-cb-sg-mp-hourly
+            bash ${GITHUB_WORKSPACE}/aws/CouchbaseServerAndSyncGateway/backout.sh aws-cb-sg-mp-hourly
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -3,10 +3,6 @@ imports:
   - path: cluster.py
   - path: group.py
   - path: naming.py
-  - path: startupCommon.sh
-  - path: server.sh
-  - path: syncGateway.sh
-  - path: successNotification.sh
 
 required:
   - couchbaseConnectionstring

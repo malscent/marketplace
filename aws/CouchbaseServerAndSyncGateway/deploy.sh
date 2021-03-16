@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
-SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
 
+set -eu
+
+SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
+bash "$SCRIPT_SOURCE/makeArchives.sh"
 STACK_NAME=$1
 PRICING_TYPE=$2 #byol or hourlypricing
-TEMPLATE_BODY="file://${SCRIPT_SOURCE}couchbase-$2-amzn-lnx2.template"
+TEMPLATE_BODY="file://${SCRIPT_SOURCE}../../build/aws/CouchbaseServerAndSyncGateway/couchbase-$PRICING_TYPE-amzn-lnx2.template"
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
-REGION=`aws configure get region`
+REGION=$(aws configure get region)
 echo "$REGION"
 if [ -z "$REGION" ]; then
     REGION="us-east-1"
 fi
 Username="couchbase"
 Password="foo123!"
-KeyName="couchbase-${REGION}"
+#KeyName="couchbase-${REGION}"
+KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
 
 aws cloudformation create-stack \
