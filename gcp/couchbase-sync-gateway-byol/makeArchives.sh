@@ -22,7 +22,8 @@ function makeArchive()
   cp "$dir../shared/naming.py" "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
 
   cp -r resources "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
-
+  # Need to perform the replacement on the group.py for the script_url
+  bash "$dir../../script_url_replacer.sh" "$dir../../build/gcp/couchbase-sync-gateway-byol/package/group.py"
   zip -r -j -X "$dir../../build/gcp/couchbase-sync-gateway-byol/gcp-sg-archive-${license}.zip" "$dir../../build/gcp/couchbase-sync-gateway-byol/package"
   #rm -rf "$dir../../build/tmp"
 }

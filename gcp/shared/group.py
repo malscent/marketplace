@@ -216,10 +216,15 @@ if [[ $(hostname) != *"syncgateway"* ]]; then
     fi
 else
     CLUSTER_HOST=$(gcloud beta runtime-config configs variables get-value {cluster}/{dnsconfig} --config-name={config})
-    until [[ ! -z "$CLUSTER_HOST" ]]; do
+    count=0
+    until [[ ! -z "$CLUSTER_HOST" ]] || [[ "$count" == "10" ]] ; do
         CLUSTER_HOST=$(gcloud beta runtime-config configs variables get-value {cluster}/{dnsconfig} --config-name={config})
         sleep 1
+        count=$((count + 1))
     done
+    if [[ "$count" == 10 ]]; then
+        CLUSTER_HOST=$(curl -H "Metadata-Flavor: Google" -s http://metadata/computeMetadata/v1/instance/hostname)
+    fi
 fi
 VERSION={version}
 USERNAME={username}
@@ -227,7 +232,7 @@ PASSWORD={password}
 NODE_COUNT={node_count}
 
 if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.4/couchbase_installer.sh"
+    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
 fi
 
 bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os UBUNTU -e GCP -s -c -d -w $NODE_COUNT {sg}
