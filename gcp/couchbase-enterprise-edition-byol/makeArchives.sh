@@ -21,7 +21,7 @@ function makeArchive()
   cp "$dir../shared/group.py" "$dir../../build/gcp/couchbase-enterprise-edition-byol/package"
   cp "$dir../shared/naming.py" "$dir../../build/gcp/couchbase-enterprise-edition-byol/package"
 
-  cp -r resources "$dir../../build/gcp/couchbase-enterprise-edition-byol/package"
+  cp -r "${dir}resources" "$dir../../build/gcp/couchbase-enterprise-edition-byol/package"
   # Need to perform the replacement on the group.py for the script_url
   bash "$dir../../script_url_replacer.sh" "$dir../../build/gcp/couchbase-enterprise-edition-byol/package/group.py"
   zip -r -j -X "$dir../../build/gcp/couchbase-enterprise-edition-byol/gcp-cbs-archive-${license}.zip" "$dir../../build/gcp/couchbase-enterprise-edition-byol/package"

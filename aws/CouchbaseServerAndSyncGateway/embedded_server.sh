@@ -71,7 +71,7 @@ fi
 CLUSTER_HOST=$rallyPublicDNS
 
 if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.4/couchbase_installer.sh"
+    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
 fi
 
 bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d
