@@ -2,7 +2,7 @@
 
 const fs = require("fs"),
       readline = require("readline");
-let template = JSON.parse(fs.readFileSync("./couchbase-amzn-lnx2.template", "utf-8"));
+let template = JSON.parse(fs.readFileSync(__dirname + "/couchbase-amzn-lnx2.template", "utf-8"));
 const replacementRegex = /\$__\w*__/g
 
 async function processEmbeddedLines(file) {
@@ -57,9 +57,9 @@ if (!args[0] || args[0] === "" || !fs.existsSync(args[0])) {
 const mapping = JSON.parse(fs.readFileSync(args[0], "utf-8"));
 template.Mappings = mapping;
 
-processEmbeddedLines('./embedded_server.sh').then(t => {
+processEmbeddedLines(__dirname + '/embedded_server.sh').then(t => {
     template.Resources.ServerLaunchConfiguration.Properties.UserData = t;
-    return processEmbeddedLines('./embedded_gateway.sh');
+    return processEmbeddedLines(__dirname + '/embedded_gateway.sh');
 }).then(x => {
     template.Resources.SyncGatewayLaunchConfiguration.Properties.UserData = x;
     console.log(JSON.stringify(template, null, 4));
