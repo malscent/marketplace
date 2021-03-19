@@ -3,7 +3,7 @@
 set -eu
 
 SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
-bash "$SCRIPT_SOURCE/makeArchives.sh"
+bash "${SCRIPT_SOURCE}makeArchives.sh"
 STACK_NAME=$1
 PRICING_TYPE=$2 #byol or hourlypricing
 TEMPLATE_BODY="file://${SCRIPT_SOURCE}../../build/aws/CouchbaseServerAndSyncGateway/couchbase-$PRICING_TYPE-amzn-lnx2.template"
