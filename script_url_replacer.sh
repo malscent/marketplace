@@ -11,10 +11,9 @@ SED_VALUE="s~$REPLACEMENT~$SCRIPT_URL~g"
 echo "Target: $TARGET_FILE"
 echo "Replacement Const: $REPLACEMENT"
 echo "SED Args: ${SED_VALUE}"
-sed -v
 echo "Target URI: ${TARGET_FILE}"
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "$SED_VALUE" "$TARGET_FILE"
+    sed -i '' -e "$SED_VALUE" "$TARGET_FILE"
 else
-    sed -i.bak -e "$SED_VALUE" "$TARGET_FILE"
+    sed --in-place -e "$SED_VALUE" "$TARGET_FILE"
 fi
