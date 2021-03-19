@@ -13,4 +13,4 @@ echo "Replacement Const: $REPLACEMENT"
 echo "SED Args: ${SED_VALUE}"
 
 echo "Target URI: ${TARGET_FILE}"
-sed -i '' "$SED_VALUE" "$TARGET_FILE"
+sed -i "$SED_VALUE" "$TARGET_FILE"
