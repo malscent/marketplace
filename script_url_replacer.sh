@@ -14,7 +14,7 @@ echo "SED Args: ${SED_VALUE}"
 
 echo "Target URI: ${TARGET_FILE}"
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e "$SED_VALUE" "$TARGET_FILE"
+    sed -i '' "$SED_VALUE" "$TARGET_FILE"
 else
-    sed -i -e "$SED_VALUE" "$TARGET_FILE"
+    sed -i.bak -e "$SED_VALUE" "$TARGET_FILE"
 fi
