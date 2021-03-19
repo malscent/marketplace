@@ -24,8 +24,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Echo $GITHUB_WORKSPACE
-        run: echo "$GITHUB_WORKSPACE"
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: '15.x'
       # Runs a set of commands using the runners shell
       - name: Deploy To AWS
         timeout-minutes: 15
