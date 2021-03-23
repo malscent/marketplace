@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Couchbase Enterprise Edition - BYOL with Server on Amazon Linux 2",
+  "Description": "Couchbase Enterprise Edition Server on Amazon Linux 2",
   "Mappings": {},
   "Parameters": {
       "ServerInstanceCount": {
@@ -177,6 +177,52 @@
       }
   },
   "Resources": {
+      "UsernameParameter": {
+          "Type": "AWS::SSM::Parameter",
+          "Properties": {
+              "DataType": "text",
+              "Description": "Couchbase Admin Username",
+              "Name": { 
+                  "Fn::Join": [
+                    "",
+                    [
+                        "/",
+                        {
+                            "Ref": "AWS::StackName"
+                        }, 
+                        "/cb_username"
+                    ]
+                  ]
+            },
+              "Type": "String",
+              "Value": {
+                "Ref": "Username"
+            }
+          }
+      },
+      "PasswordParameter": {
+        "Type": "AWS::SSM::Parameter",
+        "Properties": {
+            "DataType": "text",
+            "Description": "Couchbase Admin Password",
+            "Name": { 
+                "Fn::Join": [
+                    "",
+                    [
+                        "/",
+                        {
+                            "Ref": "AWS::StackName"
+                        }, 
+                        "/cb_password"
+                    ]
+                  ]
+          },
+            "Type": "String",
+            "Value": {
+                "Ref": "Password"
+            }
+        }
+      },
       "ServerAutoScalingGroup": {
           "Type": "AWS::AutoScaling::AutoScalingGroup",
           "Properties": {
@@ -191,7 +237,8 @@
               "DesiredCapacity": {
                   "Ref": "ServerInstanceCount"
               }
-          }
+          },
+          "DependsOn": ["UsernameParameter", "PasswordParameter"]
       },
       "ServerLaunchConfiguration": {
           "Type": "AWS::AutoScaling::LaunchConfiguration",
@@ -257,7 +304,8 @@
               "DesiredCapacity": {
                   "Ref": "SyncGatewayInstanceCount"
               }
-          }
+          },
+          "DependsOn": ["UsernameParameter", "PasswordParameter"]
       },
       "SyncGatewayLaunchConfiguration": {
           "Type": "AWS::AutoScaling::LaunchConfiguration",
@@ -339,7 +387,8 @@
                                       "ec2:CreateTags",
                                       "ec2:DescribeTags",
                                       "ec2:DescribeInstances",
-                                      "autoscaling:DescribeAutoScalingGroups"
+                                      "autoscaling:DescribeAutoScalingGroups",
+                                      "ssm:GetParameter"
                                   ],
                                   "Resource": "*"
                               }
