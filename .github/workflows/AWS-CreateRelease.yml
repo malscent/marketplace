@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
+          asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
           asset_name: aws-cbs-byol.template
           asset_content_type: application/json
       - name: Upload CBS Hourly Package
@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
+          asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
           asset_name: aws-cbs-hourly-pricing.template
           asset_content_type: application/json
       - name: Upload SG BYOL Package
@@ -54,7 +54,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/build/aws/CouchbaseSyncGateway/aws-sg-byol.template
+          asset_path: ./build/aws/CouchbaseSyncGateway/aws-sg-byol.template
           asset_name: aws-sg-byol.template
           asset_content_type: application/json
       - name: Upload SG Hourly Package
@@ -64,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: $GITHUB_WORKSPACE/build/aws/CouchbaseSyncGateway/aws-sg-hourly-pricing.template
+          asset_path: ./build/aws/CouchbaseSyncGateway/aws-sg-hourly-pricing.template
           asset_name: aws-sg-hourly-pricing.template
           asset_content_type: application/json
         
