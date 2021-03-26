@@ -1,7 +1,7 @@
 import naming
 
 def GenerateConfig(context):
-    license = 'byol'
+    license = '-ee-byol'
 
     config={}
     config['resources'] = []

@@ -249,15 +249,15 @@ bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" 
 
 def _SyncGatewayImageUrl(license, useFamily):
     if useFamily:
-        return URL_BASE + 'couchbase-public/global/images/family/couchbase-sync-gateway-ee-' + license
+        return URL_BASE + 'couchbase-public/global/images/family/couchbase-sync-gateway' + license
     else:
-        return URL_BASE + 'couchbase-public/global/images/couchbase-sync-gateway-ee-' + license + '-v20200923'
+        return URL_BASE + 'couchbase-public/global/images/couchbase-sync-gateway' + license + '-v20200923'
 
 def _ServerImageUrl(license, useFamily):
     if (useFamily):
-        return URL_BASE + 'couchbase-public/global/images/family/couchbase-server-ee-' + license
+        return URL_BASE + 'couchbase-public/global/images/family/couchbase-server' + license
     else:
-        return URL_BASE + 'couchbase-public/global/images/couchbase-server-ee-' + license + '-v20200923'
+        return URL_BASE + 'couchbase-public/global/images/couchbase-server' + license + '-v20200923'
 
 def _WaiterSuccessPath(clusterName, groupName):
     return 'status/clusters/%s/groups/%s/success' % (clusterName, groupName)
