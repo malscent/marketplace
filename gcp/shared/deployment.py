@@ -41,11 +41,11 @@ def GenerateConfig(context):
             groupName = group['group']
             outputName = naming.ExternalIpOutputName(context, clusterName, groupName)
 
-            readActionName = naming.ExternalIpVariableReadActionName(context, clusterName, groupName)
+            createActionName = naming.ExternalIpVariableCreateActionName(context, clusterName, groupName)
 
             config['outputs'].append({
                 'name': outputName,
-                'value': '$(ref.%s.text)' % readActionName
+                'value': '$(ref.%s.text)' % createActionName
             })
 
     firewall = {
