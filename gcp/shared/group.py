@@ -20,8 +20,8 @@ def GenerateConfig(context):
     groupWaiter = GenerateGroupWaiterConfig(context, runtimeconfigName, instanceGroupManagerName, instanceGroupTargetSize)
     groupWaiterName = groupWaiter['name']
 
-    externalIpReadAction = GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName)
-    externalIpReadActionName = externalIpReadAction['name']
+    # externalIpReadAction = GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName)
+    # externalIpReadActionName = externalIpReadAction['name']
 
     config={}
     config['resources'] = [
@@ -29,12 +29,12 @@ def GenerateConfig(context):
         instanceTemplate,
         instanceGroupManager,
         groupWaiter,
-        externalIpReadAction
+        # externalIpReadAction
     ]
     config['outputs'] = [
         {
             'name': 'externalIp',
-            'value': '$(ref.%s.text)' % externalIpReadActionName
+            'value': '$(ref.%s.text)' % externalIpCreateActionName
         }
     ]
     return config
@@ -48,10 +48,10 @@ def GenerateExternalIpCreateActionConfig(context, runtimeconfigName):
     actionName = naming.ExternalIpVariableCreateActionName(context, clusterName, groupName)
     action = {
         'name': actionName,
-        'action': 'gcp-types/runtimeconfig-v1beta1:runtimeconfig.projects.configs.variables.create',
+        'type': 'runtimeconfig.v1beta1.variable',
         'properties': {
             'parent': 'projects/%s/configs/%s' % (project, runtimeconfigName),
-            'name': 'projects/%s/configs/%s/variables/%s' % (project, runtimeconfigName, externalIpVariablePath),
+            'variable': externalIpVariablePath,
             'text': '<new_unknown>'
         },
         'metadata': {
@@ -60,25 +60,25 @@ def GenerateExternalIpCreateActionConfig(context, runtimeconfigName):
     }
     return action
 
-def GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName):
-    clusterName = context.properties['cluster']
-    groupName = context.properties['group']
-    project = context.env['project']
+# def GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName):
+#     clusterName = context.properties['cluster']
+#     groupName = context.properties['group']
+#     project = context.env['project']
 
-    externalIpVariablePath = _ExternalIpVariablePath(clusterName, groupName)
-    name = naming.ExternalIpVariableReadActionName(context, clusterName, groupName)
-    action = {
-        'name': name,
-        'action': 'gcp-types/runtimeconfig-v1beta1:runtimeconfig.projects.configs.variables.watch',
-        'properties': {
-            'name': 'projects/%s/configs/%s/variables/%s' % (project, runtimeconfigName, externalIpVariablePath),
-            'newerThan': '$(ref.%s.updateTime)' % externalIpCreateActionName
-        },
-        'metadata': {
-            'dependsOn': [groupWaiterName]
-        }
-    }
-    return action
+#     externalIpVariablePath = _ExternalIpVariablePath(clusterName, groupName)
+#     name = naming.ExternalIpVariableReadActionName(context, clusterName, groupName)
+#     action = {
+#         'name': name,
+#         'action': 'gcp-types/runtimeconfig-v1beta1:runtimeconfig.projects.configs.variables.watch',
+#         'properties': {
+#             'name': 'projects/%s/configs/%s/variables/%s' % (project, runtimeconfigName, externalIpVariablePath),
+#             'newerThan': '$(ref.%s.updateTime)' % externalIpCreateActionName
+#         },
+#         'metadata': {
+#             'dependsOn': [groupWaiterName]
+#         }
+#     }
+#     return action
 
 def GenerateInstanceTemplateConfig(context, runtimeconfigName):
     license = context.properties['license']
@@ -230,6 +230,13 @@ VERSION={version}
 USERNAME={username}
 PASSWORD={password}
 NODE_COUNT={node_count}
+
+# Before we install.  we need to specify the cluster host dns to the deployment
+gcp_hostname=$(curl -H "Metadata-Flavor: Google" -s http://metadata/computeMetadata/v1/instance/hostname)
+if [[ "$CLUSTER_HOST" == "$gcp_hostname" ]]; then
+    external_ip=$(curl -H "Metadata-Flavor: Google" -s http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+    gcloud beta runtime-config configs variables set external-ip/clusters/{cluster}/groups/server  "$external_ip" --config-name={config}
+fi
 
 if [[ ! -e "couchbase_installer.sh" ]]; then
     curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
