@@ -52,3 +52,9 @@ def InstanceGroupManagerName(context, clusterName, groupName):
 def InstanceGroupInstanceBaseName(context, clusterName, groupName):
     return '%s-%s-%s-vm' % \
            (BaseDeploymentName(context), clusterName, groupName)
+
+def UsernameVariableName(context):
+    return '%s-cb-username' % (BaseDeploymentName(context))
+
+def PasswordVariableName(context):
+    return '%s-cb-password' % (BaseDeploymentName(context))

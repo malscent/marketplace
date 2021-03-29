@@ -15,7 +15,8 @@ def GenerateConfig(context):
         }
     }
     config['resources'].append(runtimeconfig)
-
+    config['resources'].append(GenerateCouchbaseUserPasswordVariable(context, runtimeconfigName, context.properties['couchbasePassword']))
+    config['resources'].append(GenerateCouchbaseUserUsernameVariable(context, runtimeconfigName, context.properties['couchbaseUsername']))
     for cluster in context.properties['clusters']:
         clusterName = cluster['cluster']
         clusterResourceName = naming.ClusterName(context, clusterName)
@@ -62,3 +63,36 @@ def GenerateConfig(context):
     config['resources'].append(firewall)
 
     return config
+
+
+def GenerateCouchbaseUserPasswordVariable(context, runtimeconfigName, password):
+    project = context.env['project']
+    variable = {
+        'name': naming.PasswordVariableName(context),
+        'type': 'runtimeconfig.v1beta1.variable',
+        'properties': {
+            'parent': 'projects/%s/configs/%s' % (project, runtimeconfigName),
+            'variable': 'cb-password',
+            'text': password
+        },
+        'metadata': {
+            'dependsOn': [runtimeconfigName]
+        }
+    }
+    return variable
+
+def GenerateCouchbaseUserUsernameVariable(context, runtimeconfigName, username):
+    project = context.env['project']
+    variable = {
+        'name': naming.UsernameVariableName(context),
+        'type': 'runtimeconfig.v1beta1.variable',
+        'properties': {
+            'parent': 'projects/%s/configs/%s' % (project, runtimeconfigName),
+            'variable': 'cb-username',
+            'text': username
+        },
+        'metadata': {
+            'dependsOn': [runtimeconfigName]
+        }
+    }
+    return variable

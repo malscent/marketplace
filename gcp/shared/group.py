@@ -20,16 +20,12 @@ def GenerateConfig(context):
     groupWaiter = GenerateGroupWaiterConfig(context, runtimeconfigName, instanceGroupManagerName, instanceGroupTargetSize)
     groupWaiterName = groupWaiter['name']
 
-    # externalIpReadAction = GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName)
-    # externalIpReadActionName = externalIpReadAction['name']
-
     config={}
     config['resources'] = [
         externalIpCreateAction,
         instanceTemplate,
         instanceGroupManager,
         groupWaiter,
-        # externalIpReadAction
     ]
     config['outputs'] = [
         {
@@ -59,26 +55,6 @@ def GenerateExternalIpCreateActionConfig(context, runtimeconfigName):
         }
     }
     return action
-
-# def GenerateExternalIpReadActionConfig(context, runtimeconfigName, externalIpCreateActionName, groupWaiterName):
-#     clusterName = context.properties['cluster']
-#     groupName = context.properties['group']
-#     project = context.env['project']
-
-#     externalIpVariablePath = _ExternalIpVariablePath(clusterName, groupName)
-#     name = naming.ExternalIpVariableReadActionName(context, clusterName, groupName)
-#     action = {
-#         'name': name,
-#         'action': 'gcp-types/runtimeconfig-v1beta1:runtimeconfig.projects.configs.variables.watch',
-#         'properties': {
-#             'name': 'projects/%s/configs/%s/variables/%s' % (project, runtimeconfigName, externalIpVariablePath),
-#             'newerThan': '$(ref.%s.updateTime)' % externalIpCreateActionName
-#         },
-#         'metadata': {
-#             'dependsOn': [groupWaiterName]
-#         }
-#     }
-#     return action
 
 def GenerateInstanceTemplateConfig(context, runtimeconfigName):
     license = context.properties['license']
@@ -163,7 +139,7 @@ def GenerateInstanceGroupManagerConfig(context, instanceTemplateName, instanceGr
             'targetSize': instanceGroupTargetSize
         },
         'metadata': {
-            'dependsOn': [externalIpCreateActionName]
+            'dependsOn': [externalIpCreateActionName, naming.UsernameVariableName(context), naming.PasswordVariableName(context)]
         }
     }
     return instanceGroupManager
@@ -227,8 +203,8 @@ else
     fi
 fi
 VERSION={version}
-USERNAME={username}
-PASSWORD={password}
+USERNAME=$(gcloud beta runtime-config configs variables get-value {username} --config-name={config})
+PASSWORD=$(gcloud beta runtime-config configs variables get-value {password} --config-name={config})
 NODE_COUNT={node_count}
 
 # Before we install.  we need to specify the cluster host dns to the deployment
@@ -244,8 +220,8 @@ fi
 
 bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os UBUNTU -e GCP -s -c -d -w $NODE_COUNT {sg}
     '''.format(cluster=context.properties['cluster'], 
-               username=context.properties['couchbaseUsername'], 
-               password=context.properties['couchbasePassword'], 
+               username='cb-username', 
+               password='cb-password', 
                dnsconfig='rallyPrivateDNS', 
                config=runtimeconfigName, 
                node_count=str(context.properties['clusterNodesCount']), 
