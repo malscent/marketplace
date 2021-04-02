@@ -1,7 +1,7 @@
 import naming
 
 def GenerateConfig(context):
-    license = 'hourly-pricing'
+    license = '-hourly-pricing'
 
     config={}
     config['resources'] = []
