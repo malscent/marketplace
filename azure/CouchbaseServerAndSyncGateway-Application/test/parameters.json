@@ -9,7 +9,7 @@
       "value": "6.6.1"
     },
     "syncGatewayNodeCount": {
-      "value": 1
+      "value": 2
     },
     "syncGatewayVersion": {
       "value": "2.8.1"
@@ -27,6 +27,24 @@
       "value": "eastus"
     },
     "license": {
+      "value": "byol_2019"
+    },
+    "publisher": {
+      "value": "couchbase"
+    },
+    "offer": {
+      "value": "couchbase-server-enterprise"
+    },
+    "image_version": {
+      "value": "18.4.0"
+    },
+    "sync_gateway_offer": {
+      "value": "couchbase-sync-gateway-enterprise"
+    },
+    "sync_gateway_image_version": {
+      "value": "18.4.0"
+    },    
+    "sync_gateway_sku": {
       "value": "byol_2019"
     },
     "_artifactsLocation": {
