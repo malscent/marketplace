@@ -1,0 +1,79 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Azure Private Offer Workflow
+
+# Controls when the action will run. 
+on:
+  workflow_dispatch:
+    inputs:
+      customer:
+        description: "Customer Name"
+        required: true 
+      sku:
+        description: "Couchbase Server SKU"
+        required: true
+      sync_gateway_sku:
+        description: "Sync Gateway SKU"
+        required: true
+      image_version:
+        description: "Couchbase Server Image Version"
+        required: true
+        default: "18.4.0"
+      offer_id: 
+        description: "Couchbase Server Offer Id"
+        required: true
+        default: "couchbase-server-enterprise"
+      publisher:
+        description: "Publisher Id"
+        required: true
+        default: "couchbase"
+      sync_gateway_image_version:
+        description: "Sync Gateway Image Version"
+        required: true
+        default: "18.4.0"
+      sync_gateway_offer_id: 
+        description: "Sync Gateway Offer Id"
+        required: true
+        default: "couchbase-sync-gateway-enterprise"        
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  azure-private-offer:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Create Build Directory
+        run: mkdir ${GITHUB_WORKSPACE}/build
+      # Runs a set of commands using the runners shell
+      - name: Build BYOL CBS Package
+        env:
+          LICENSE: ${{github.event.inputs.customer}}
+          SKU: ${{github.event.inputs.sku}}
+          OFFER: ${{github.event.inputs.offer_id}}
+          PUBLISHER: ${{github.event.inputs.publisher}}
+          IMAGE_VERSION: ${{github.event.inputs.image_version}}
+          SYNC_GATEWAY_IMAGE_VERSION:  ${{github.event.inputs.sync_gateway_image_version}}
+          SYNC_GATEWAY_OFFER_ID:  ${{github.event.inputs.sync_gateway_offer_id}}
+          SYNC_GATEWAY_SKU: ${{github.event.inputs.sync_gateway_sku}}
+        run: | 
+          bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh \
+                                                  -l $LICENSE \
+                                                  -s $SKU \
+                                                  -p $PUBLISHER \
+                                                  -o $OFFER \
+                                                  -v $IMAGE_VERSION \
+                                                  -g $SYNC_GATEWAY_OFFER_ID \
+                                                  -i $SYNC_GATEWAY_IMAGE_VERSION \
+                                                  -u $SYNC_GATEWAY_SKU
+      - name: Upload customer offer package
+        uses: actions/upload-artifact@v2
+        with:
+          name: azure-cbs-archive-${{github.event.inputs.customer}}.zip
+          path: build/azure/CouchBaseServerAndSyncGateway/azure-cbs-archive-${{github.event.inputs.customer}}.zip
+          retention-days: 14
