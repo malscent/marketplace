@@ -1,0 +1,91 @@
+# This is a basic workflow to help you get started with Actions
+
+name: GCP Marketplace VM Creation Workflow
+
+# Controls when the action will run. 
+# Controls when the action will run. 
+on:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  gcp-vm-release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: GCP Setup
+        uses: google-github-actions/setup-gcloud@master
+        with: 
+          project_id: ${{ secrets.GCP_VM_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_COUCHBASE_PUBLIC_SA_KEY }}
+          export_default_credentials: true
+      - name: Echo $GITHUB_WORKSPACE
+        run: echo "$GITHUB_WORKSPACE"
+      # Runs a set of commands using the runners shell
+      - name: Create Couchbase Server Enterprise BYOL Image
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l "couchbase-server-ee-byol" \
+                                                                -n "couchbase-server-ee-byol" \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud
+      - name: Create Couchbase Server Enterprise Hourly Image
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l "couchbase-server-ee-hourly-pricing" \
+                                                                -n "couchbase-server-ee-hourly-pricing" \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud
+      - name: Create Couchbase Sync Gateway BYOL Image (For Server Offer)
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l couchbase-sync-gateway-ee-byol \
+                                                                -n couchbase-sync-gateway-ee-byol \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud
+      - name: Create Couchbase Sync Gateway Hourly Image (For Server Offer)
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l "couchbase-sync-gateway-ee-hourly-pricing" \
+                                                                -n "couchbase-sync-gateway-ee-hourly-pricing" \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud
+      - name: Create Couchbase Sync Gateway BYOL Image
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l couchbase-sync-gateway-byol \
+                                                                -n couchbase-sync-gateway-byol \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud
+      - name: Create Couchbase Sync Gateway Hourly Image
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/gcp/couchbase-vm-generation/create.sh \
+                                                                -l "couchbase-sync-gateway-hourly-pricing" \
+                                                                -n "couchbase-sync-gateway-hourly-pricing" \
+                                                                -z us-east1-b \
+                                                                -p couchbase-public \
+                                                                -f ubuntu-1804-lts \
+                                                                -i ubuntu-os-cloud                                                                
