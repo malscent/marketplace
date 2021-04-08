@@ -21,25 +21,19 @@
 #  -n : Deployment Name                                                       #
 #     usage: -n test_deployment_one                                           #
 #     purposes: names the deployment in azure                                 #
-#  -b : BYOL Template                                                         #
-#     purpose: specify the BYOL template                                      #
-#  -h : Hourly Template                                                       #
-#     purpose: Specify the Hourly Template                                    #
 ###############################################################################
 
 SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
 
-TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-byol.json"
+TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate.json"
 
-while getopts l:p:g:n:h:b flag
+while getopts l:p:g:n: flag
 do
     case "${flag}" in
         l) LOCATION=${OPTARG};;
         p) PARAMETERS=${OPTARG};;
         g) RESOURCE_GROUP=${OPTARG};;
         n) NAME=${OPTARG};;
-        h) TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-hourly-pricing.json";;
-        b) TEMPLATE="${SCRIPT_SOURCE}/../mainTemplate-byol.json";;
         *) exit 1;;
     esac
 done

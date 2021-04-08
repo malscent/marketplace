@@ -24,8 +24,28 @@ jobs:
       - name: Create Build Directory
         run: mkdir ${GITHUB_WORKSPACE}/build
       # Runs a set of commands using the runners shell
-      - name: Build CBS Packages
-        run: bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh
+      - name: Build BYOL CBS Package
+        run: |
+          bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh \
+                                          -l byol \
+                                          -s byol_2019 \
+                                          -p couchbase \
+                                          -o couchbase-server-enterprise \
+                                          -v 18.4.0 \
+                                          -g couchbase-sync-gateway-enterprise \
+                                          -i 18.4.0 \
+                                          -u byol_2019
+      - name: Build Hourly CBS Package
+        run: |
+          bash ${GITHUB_WORKSPACE}/azure/CouchbaseServerAndSyncGateway-Application/makeArchives.sh \
+                                        -l hourly-pricing \
+                                        -s hourly_pricing_mar19 \
+                                        -p couchbase \
+                                        -o couchbase-server-enterprise \
+                                        -v 18.4.0 \
+                                        -g couchbase-sync-gateway-enterprise \
+                                        -i 18.4.0 \
+                                        -u hourly_pricing_mar19
       - name: Upload CBS BYOL Package
         id: upload-cbs-byol-asset
         uses: actions/upload-release-asset@v1

@@ -28,7 +28,25 @@
     },
     "license": {
       "value": "byol_2019"
+    },    
+    "publisher": {
+      "value": "couchbase"
     },
+    "offer": {
+      "value": "couchbase-server-enterprise"
+    },
+    "image_version": {
+      "value": "18.4.0"
+    },
+    "sync_gateway_offer": {
+      "value": "couchbase-sync-gateway-enterprise"
+    },
+    "sync_gateway_image_version": {
+      "value": "18.4.0"
+    },
+    "sync_gateway_sku": {
+      "value": "byol_2019"
+    },    
     "_artifactsLocation": {
       "value": "https://github.com/couchbase-partners/marketplace-scripts/releases/latest/download/"
     },

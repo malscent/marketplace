@@ -32,7 +32,31 @@
     },
     "license": {
       "type": "string",
-      "defaultValue": "hourly_pricing_mar19"
+      "defaultValue": "<<LICENSE>>"
+    },
+    "publisher": {
+      "type": "string",
+      "defaultValue": "<<PUBLISHER>>"
+    },
+    "offer": {
+      "type": "string",
+      "defaultValue": "<<OFFER>>"
+    },
+    "image_version": {
+      "type": "string",
+      "defaultValue": "<<IMAGE_VERSION>>"
+    },
+    "sync_gateway_offer": {
+      "type": "string",
+      "defaultValue": "<<SYNC_GATEWAY_OFFER>>"
+    },
+    "sync_gateway_image_version": {
+      "type": "string",
+      "defaultValue": "<<SYNC_GATEWAY_IMAGE_VERSION>>"
+    },
+    "sync_gateway_sku": {
+      "type": "string",
+      "defaultValue": "<<SYNC_GATEWAY_SKU>>"
     },
     "_artifactsLocation": {
       "type": "string",
@@ -308,8 +332,8 @@
         "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]"
       ],
       "plan": {
-        "publisher": "couchbase",
-        "product": "couchbase-server-enterprise",
+        "publisher": "[parameters('publisher')]",
+        "product": "[parameters('offer')]",
         "name": "[parameters('license')]"
       },
       "sku": {
@@ -328,10 +352,10 @@
               "createOption": "FromImage"
             },
             "imageReference": {
-              "publisher": "couchbase",
-              "offer": "couchbase-server-enterprise",
+              "publisher": "[parameters('publisher')]",
+              "offer": "[parameters('offer')]",
               "sku": "[parameters('license')]",
-              "version": "18.4.0"
+              "version": "[parameters('image_version')]"
             },
             "dataDisks": [
               {
@@ -428,9 +452,9 @@
         "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]"
       ],
       "plan": {
-        "publisher": "couchbase",
-        "product": "couchbase-sync-gateway-enterprise",
-        "name": "[parameters('license')]"
+        "publisher": "[parameters('publisher')]",
+        "product": "[parameters('sync_gateway_offer')]",
+        "name": "[parameters('sync_gateway_sku')]"
       },
       "sku": {
         "name": "[parameters('vmSize')]",
@@ -448,10 +472,10 @@
               "createOption": "FromImage"
             },
             "imageReference": {
-              "publisher": "couchbase",
-              "offer": "couchbase-sync-gateway-enterprise",
-              "sku": "[parameters('license')]",
-              "version": "18.4.0"
+              "publisher": "[parameters('publisher')]",
+              "offer": "[parameters('sync_gateway_offer')]",
+              "sku": "[parameters('sync_gateway_sku')]",
+              "version": "[parameters('sync_gateway_image_version')]"
             }
           },
           "osProfile": {
