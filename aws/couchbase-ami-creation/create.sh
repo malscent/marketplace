@@ -7,7 +7,12 @@ set -eu
 # gcloud                                                                      #
 # tr                                                                          #
 ###############################################################################
-
+#  Builds a blank AMI for usage in marketplace.  Base image is based off a    #
+#  m4.xlarge AWS EC2 instance                                                 #
+#                                                                             #
+# NOTE:  This script requires an AWS Security Group created on the default    #
+# VPC.  It must be named 'aws-ami-creation' and allow ingress and egress of   #
+# http, https and ssh traffic                                                 #
 ###############################################################################
 #  Parameters                                                                 #
 #  -r : region                                                                #
@@ -68,12 +73,18 @@ echo "Instance Id: $INSTANCE_ID"
 PUBLIC_IP=$(aws ec2 describe-instances --instance-id "$INSTANCE_ID" | jq -r '.Reservations[] | .Instances[] | .NetworkInterfaces[] | .Association.PublicIp')
 echo "Instance Public IP: $PUBLIC_IP"
 
-# If we decide to do more than just an empty OS. .we need to do it before we run this command, as you won't be able to log into the VM once we're done
+# If we decide to do more than just an empty OS. We need to do it before we run this command, as you won't be able to log into the VM once we're done
 # This ssh's into the instance updates the packages and removes ec2-user and root ssh details
 echo "Waiting on instance to intialize"
-sleep 60
+instanceState=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --output json | jq -r '.Reservations[] | .Instances[] | .State.Name')
+
+until [[ "$instanceState" == "running" ]]; do
+    sleep 5
+    instanceState=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --output json | jq -r '.Reservations[] | .Instances[] | .State.Name')
+done
+
 echo "Updating packages on instance"
-ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /home/root/.ssh/* && exit"
+ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /home/root/.ssh/*"
 
 #Create AMI
 echo "Creating AMI:  $AMI_NAME"
