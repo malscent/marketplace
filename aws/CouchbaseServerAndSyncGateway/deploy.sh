@@ -6,7 +6,7 @@ SCRIPT_SOURCE=${BASH_SOURCE[0]/%deploy.sh/}
 bash "${SCRIPT_SOURCE}makeArchives.sh"
 STACK_NAME=$1
 PRICING_TYPE=$2 #byol or hourlypricing
-TEMPLATE_BODY="file://${SCRIPT_SOURCE}../../build/aws/CouchbaseServerAndSyncGateway/couchbase-$PRICING_TYPE-amzn-lnx2.template"
+TEMPLATE_BODY="file://${SCRIPT_SOURCE}../../build/aws/CouchbaseServerAndSyncGateway/aws-cbs-$PRICING_TYPE.template"
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
 REGION=$(aws configure get region)
@@ -19,6 +19,10 @@ Password="foo123!"
 #KeyName="couchbase-${REGION}"
 KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
+ServerInstanceCount=$3
+ServerVersion=$4
+SyncGatewayInstanceCount=$5
+SyncGatewayVersion=$6
 
 aws cloudformation create-stack \
 --capabilities CAPABILITY_IAM \
@@ -29,7 +33,11 @@ aws cloudformation create-stack \
 ParameterKey=Username,ParameterValue=${Username} \
 ParameterKey=Password,ParameterValue=${Password} \
 ParameterKey=KeyName,ParameterValue="${KeyName}" \
-ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR}
+ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
+ParameterKey=ServerInstanceCount,ParameterValue="${ServerInstanceCount}" \
+ParameterKey=ServerVersion,ParameterValue="${ServerVersion}" \
+ParameterKey=SyncGatewayInstanceCount,ParameterValue="${SyncGatewayInstanceCount}" \
+ParameterKey=SyncGatewayVersion,ParameterValue="${SyncGatewayVersion}"
 
 
 Output=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
