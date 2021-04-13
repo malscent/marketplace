@@ -73,7 +73,7 @@ echo "Instance Public IP: $PUBLIC_IP"
 echo "Waiting on instance to intialize"
 sleep 60
 echo "Updating packages on instance"
-ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /home/root/.ssh/* && exit"
+ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /root/.ssh/* && exit"
 
 #Create AMI
 echo "Creating AMI:  $AMI_NAME"
