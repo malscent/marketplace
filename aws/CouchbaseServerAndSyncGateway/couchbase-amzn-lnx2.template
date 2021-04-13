@@ -176,9 +176,46 @@
           "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
       }
   },
+  "Conditions": {
+      "InstallSyncGateway": {
+        "Fn::Not": [
+            {
+                "Fn::Equals": [              
+                  {
+                      "Ref": "SyncGatewayInstanceCount"
+                  },
+                  0
+              ]
+            }
+        ]
+      },
+      "InstallCouchbaseServer": {
+          "Fn::Not": [
+              {
+                  "Fn::Equals": [              
+                    {
+                        "Ref": "ServerInstanceCount"
+                    },
+                    0
+                ]
+              }
+          ]
+      },
+      "Install": {
+          "Fn::Or": [
+              {
+                  "Condition": "InstallCouchbaseServer"
+              },
+              {
+                  "Condition":"InstallSyncGateway"
+              }
+          ]
+      }
+  },
   "Resources": {
       "UsernameParameter": {
           "Type": "AWS::SSM::Parameter",
+          "Condition": "Install",
           "Properties": {
               "DataType": "text",
               "Description": "Couchbase Admin Username",
@@ -202,6 +239,7 @@
       },
       "PasswordParameter": {
         "Type": "AWS::SSM::Parameter",
+        "Condition": "Install",
         "Properties": {
             "DataType": "text",
             "Description": "Couchbase Admin Password",
@@ -225,6 +263,7 @@
       },
       "ServerAutoScalingGroup": {
           "Type": "AWS::AutoScaling::AutoScalingGroup",
+          "Condition": "InstallCouchbaseServer",
           "Properties": {
               "AvailabilityZones": {
                   "Fn::GetAZs": ""
@@ -232,7 +271,7 @@
               "LaunchConfigurationName": {
                   "Ref": "ServerLaunchConfiguration"
               },
-              "MinSize": 1,
+              "MinSize": 0,
               "MaxSize": 100,
               "DesiredCapacity": {
                   "Ref": "ServerInstanceCount"
@@ -242,6 +281,7 @@
       },
       "ServerLaunchConfiguration": {
           "Type": "AWS::AutoScaling::LaunchConfiguration",
+          "Condition": "InstallCouchbaseServer",
           "Properties": {
               "ImageId": {
                   "Fn::FindInMap": [
@@ -257,7 +297,7 @@
               },
               "SecurityGroups": [
                   {
-                      "Ref": "CouchbaseSecurityGroup"
+                      "Ref": "CouchbaseServerSecurityGroup"
                   }
               ],
               "KeyName": {
@@ -292,6 +332,7 @@
       },
       "SyncGatewayAutoScalingGroup": {
           "Type": "AWS::AutoScaling::AutoScalingGroup",
+          "Condition": "InstallSyncGateway",
           "Properties": {
               "AvailabilityZones": {
                   "Fn::GetAZs": ""
@@ -301,6 +342,7 @@
               },
               "MinSize": 0,
               "MaxSize": 100,
+              "LoadBalancerNames": [{ "Ref": "GatewayLoadBalancer" }],
               "DesiredCapacity": {
                   "Ref": "SyncGatewayInstanceCount"
               }
@@ -309,6 +351,7 @@
       },
       "SyncGatewayLaunchConfiguration": {
           "Type": "AWS::AutoScaling::LaunchConfiguration",
+          "Condition": "InstallSyncGateway",
           "Properties": {
               "ImageId": {
                   "Fn::FindInMap": [
@@ -324,7 +367,7 @@
               },
               "SecurityGroups": [
                   {
-                      "Ref": "CouchbaseSecurityGroup"
+                      "Ref": "SyncGatewaySecurityGroup"
                   }
               ],
               "KeyName": {
@@ -346,8 +389,37 @@
               }
           }
       },
+      "GatewayLoadBalancer": {
+        "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+        "Condition": "InstallSyncGateway",
+        "Properties": {
+            "AvailabilityZones" : { "Fn::GetAZs": "" },
+            "CrossZone": "true",
+            "Listeners": [{
+                "LoadBalancerPort": "4984",
+                "InstancePort": "4984",
+                "Protocol": "HTTP"
+            },{
+                "LoadBalancerPort": "4985",
+                "InstancePort": "4985",
+                "Protocol": "HTTP"
+            },{
+                "LoadBalancerPort": "4986",
+                "InstancePort": "4986",
+                "Protocol": "HTTP"
+            }],
+            "HealthCheck": {
+                "Target": "HTTP:4984/",
+                "HealthyThreshold": "3",
+                "UnhealthyThreshold": "5",
+                "Interval": "30",
+                "Timeout": "5"
+            }
+        }
+      },
       "CouchbaseInstanceProfile": {
           "Type": "AWS::IAM::InstanceProfile",
+          "Condition": "Install",
           "Properties": {
               "Roles": [
                   {
@@ -358,6 +430,7 @@
       },
       "CouchbaseRole": {
           "Type": "AWS::IAM::Role",
+          "Condition":"Install",
           "Properties": {
               "AssumeRolePolicyDocument": {
                   "Version": "2012-10-17",
@@ -398,8 +471,9 @@
               ]
           }
       },
-      "CouchbaseSecurityGroup": {
+      "CouchbaseServerSecurityGroup": {
           "Type": "AWS::EC2::SecurityGroup",
+          "Condition":"InstallCouchbaseServer",
           "Properties": {
               "GroupDescription": "Enable SSH and Couchbase Ports",
               "SecurityGroupIngress": [
@@ -473,6 +547,41 @@
                   }
               ]
           }
-      }
+      },
+      "SyncGatewaySecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Condition":"InstallSyncGateway",
+        "Properties": {
+            "GroupDescription": "Enable SSH and Sync Gateway Ports",
+            "SecurityGroupIngress": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 22,
+                    "ToPort": 22,
+                    "CidrIp": {
+                        "Ref": "SSHCIDR"
+                    }
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 4984,
+                    "ToPort": 4984,
+                    "CidrIp": "0.0.0.0/0"
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 4985,
+                    "ToPort": 4985,
+                    "CidrIp": "0.0.0.0/0"
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 4986,
+                    "ToPort": 4986,
+                    "CidrIp": "0.0.0.0/0"
+                }
+            ]
+        }
+    }
   }
 }
