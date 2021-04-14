@@ -84,8 +84,7 @@ until [[ "$instanceState" == "running" ]]; do
 done
 
 echo "Updating packages on instance"
-ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /home/root/.ssh/*"
-
+ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /root/.ssh/* && exit"
 
 #Create AMI
 echo "Creating AMI:  $AMI_NAME"
