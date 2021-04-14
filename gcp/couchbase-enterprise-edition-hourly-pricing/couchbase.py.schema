@@ -48,7 +48,46 @@ properties:
   australia-southeast1:
     type: boolean
     default: false
-
+  us-west4:
+    type: boolean
+    default: false
+  us-west2:
+    type: boolean
+    default: false  
+  us-west3:
+    type: boolean
+    default: false
+  northamerica-northeast1:
+    type: boolean
+    default: false
+  europe-central2:
+    type: boolean
+    default: false
+  europe-north1:
+    type: boolean
+    default: false
+  europe-west6:
+    type: boolean
+    default: false
+  asia-southeast2:
+    type: boolean
+    default: false
+  asia-northeast3:
+    type: boolean
+    default: false
+  asia-northeast2:
+    type: boolean
+    default: false
+  asia-east2:
+    type: boolean
+    default: false
+  southamerica-east1:
+    type: boolean
+    default: false
+  asia-south1:
+    type: boolean
+    default: false
+    
   defaultZone:
     type: string
     default: us-central1-f
