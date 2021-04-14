@@ -82,7 +82,7 @@ until [[ "$instanceState" == "running" ]]; do
     sleep 5
     instanceState=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --output json | jq -r '.Reservations[] | .Instances[] | .State.Name')
 done
-
+sleep 60 #We have to wait until SSH starts up.
 echo "Updating packages on instance"
 ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && rm -rf /home/ec2-user/.ssh/* && echo 'Removing root Authorized Keys' && rm -rf /root/.ssh/* && exit"
 
