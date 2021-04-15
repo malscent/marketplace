@@ -73,6 +73,45 @@ input:
     - name: australia-southeast1
       title: australia-southeast1
       booleanGroup: regions
+    - name: asia-south1
+      title: asia-south1
+      booleanGroup: regions
+    - name: southamerica-east1
+      title: southamerica-east1
+      booleanGroup: regions
+    - name: asia-east2
+      title: asia-east2
+      booleanGroup: regions
+    - name: asia-northeast2
+      title: asia-northeast2
+      booleanGroup: regions
+    - name: asia-northeast3
+      title: asia-northeast3
+      booleanGroup: regions
+    - name: asia-southeast2
+      title: asia-southeast2
+      booleanGroup: regions
+    - name: europe-central2
+      title: europe-central2
+      booleanGroup: regions                              
+    - name: europe-north1
+      title: europe-north1
+      booleanGroup: regions
+    - name: europe-west6
+      title: europe-west6
+      booleanGroup: regions
+    - name: northamerica-northeast1
+      title: northamerica-northeast1
+      booleanGroup: regions
+    - name: us-west2
+      title: us-west2
+      booleanGroup: regions
+    - name: us-west3
+      title: us-west3
+      booleanGroup: regions
+    - name: us-west4
+      title: us-west4
+      booleanGroup: regions                                    
 
     - name: serverNodeCount
       title: Couchbase Server Node Count

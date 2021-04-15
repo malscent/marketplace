@@ -61,14 +61,27 @@ def GetRegionsList(context):
     availableRegions = [
         'us-central1',
         'us-west1',
+        'us-west2',
+        'us-west3',
+        'us-west4',
         'us-east1',
         'us-east4',
+        'northamerica-northeast1',
+        'southamerica-east1',
         'europe-west1',
         'europe-west2',
         'europe-west3',
+        'europe-central2',
+        'europe-north1',
+        'europe-west6',
+        'asia-east2',
+        'asia-south1',
         'asia-southeast1',
+        'asia-southeast2',
         'asia-east1',
         'asia-northeast1',
+        'asia-northeast2',
+        'asia-northeast3',
         'australia-southeast1'
     ]
     for region in availableRegions:
