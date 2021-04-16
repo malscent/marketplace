@@ -10,7 +10,7 @@ description:
   eulaUrl: 'https://www.couchbase.com/ESLA08042020'
   documentations:
     - title: Getting Started on the GCP Marketplace
-      url: https://github.com/couchbase-partners/google-deployment-manager-couchbase/README.md
+      url: https://github.com/couchbase-partners/marketplace/blob/main/gcp/shared/README.md
       destinations:
         - DESTINATION_SOLUTION_DETAILS
         - DESTINATION_CONFIGURATION
