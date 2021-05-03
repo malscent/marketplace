@@ -111,25 +111,7 @@
                         '/publicIPAddresses/',
                         couchbase.generateResourceName('server-public-ip')
                       )
-                    ]",
-    "syncPubIP": "[
-                    if(
-                      equals(parameters('syncGatewayNodeCount'), 0),
-                       'n/a', 
-                      concat(
-                        resourceGroup().id, 
-                        '/providers/Microsoft.Compute/virtualMachineScaleSets/',
-                        couchbase.generateResourceName('syncgateway'),
-                        '/virtualMachines/0/networkInterfaces/',
-                        couchbase.generateResourceName('syncgateway-nic'),
-                        '/ipConfigurations/',
-                        couchbase.generateResourceName('syncgateway-ipconfig'), 
-                        '/publicIPAddresses/',
-                        couchbase.generateResourceName('syncgateway-public-ip')
-                      )
-                    )
-                    
-                  ]"
+                    ]"
   },
   "resources": [
     {
@@ -302,7 +284,7 @@
       "apiVersion": "2019-04-01",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', couchbase.generateResourceName('networkSecurityGroups'))]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups/', couchbase.generateResourceName('networkSecurityGroups'))]"
       ],
       "properties": {
         "addressSpace": {
@@ -329,7 +311,7 @@
       "location": "[parameters('location')]",
       "apiVersion": "2019-03-01",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', couchbase.generateResourceName('vnet'))]"
       ],
       "plan": {
         "publisher": "[parameters('publisher')]",
@@ -385,7 +367,7 @@
                       "name": "[couchbase.generateResourceName('server-ipconfig')]",
                       "properties": {
                         "subnet": {
-                          "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet')), '/subnets/', couchbase.generateResourceName('subnet'))]"
+                          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', couchbase.generateResourceName('vnet'), couchbase.generateResourceName('subnet'))]"
                         },
                         "publicipaddressconfiguration": {
                           "name": "[couchbase.generateResourceName('server-public-ip')]",
@@ -690,8 +672,8 @@
       "location": "[parameters('location')]",
       "apiVersion": "2019-03-01",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', couchbase.generateResourceName('vnet'))]",
-        "[concat('Microsoft.Network/loadBalancers/', couchbase.generateResourceName('sg-lb'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', couchbase.generateResourceName('vnet'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', couchbase.generateResourceName('sg-lb'))]"
       ],
       "plan": {
         "publisher": "[parameters('publisher')]",
@@ -736,12 +718,9 @@
                       "name": "[couchbase.generateResourceName('syncgateway-ipconfig')]",
                       "properties": {
                         "subnet": {
-                          "id": "[concat(
-                                    resourceId('Microsoft.Network/virtualNetworks/', 
-                                              couchbase.generateResourceName('vnet')
-                                              ), 
-                                    '/subnets/', 
-                                    couchbase.generateResourceName('subnet')
+                          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 
+                                              couchbase.generateResourceName('vnet'), 
+                                              couchbase.generateResourceName('subnet')
                                 )]"
                         },
                         "loadBalancerBackendAddressPools": [
