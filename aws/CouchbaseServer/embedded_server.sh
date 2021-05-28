@@ -12,10 +12,10 @@ stackName=$__AWSStackName__
 # shellcheck disable=SC2154
 VERSION=$__ServerVersion__
 
-resource="ServerAutoScalingGroup"
 
 region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
+resource="ServerAutoScalingGroup"
 
 USERNAME=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_username" --region "$region" | jq -r '.Parameter.Value')
 PASSWORD=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_password" --region "$region" | jq -r '.Parameter.Value')

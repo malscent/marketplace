@@ -2,7 +2,6 @@
 
 const fs = require("fs"),
       readline = require("readline");
-let template = JSON.parse(fs.readFileSync(__dirname + "/couchbase-amzn-lnx2.template", "utf-8"));
 const replacementRegex = /\$__\w*__/g
 
 async function processEmbeddedLines(file) {
@@ -48,20 +47,39 @@ function performReplacement(line) {
     return values;
 }
 
-
 let args = process.argv.slice(2);
 if (!args[0] || args[0] === "" || !fs.existsSync(args[0])) {
-    console.error("You must specify the mapping file to use.");
+    console.error("You must specify the source template file to use.");
     process.exit(1);
 }
-const mapping = JSON.parse(fs.readFileSync(args[0], "utf-8"));
+
+let template = JSON.parse(fs.readFileSync(args[0], "utf-8"));
+
+
+if (!args[1] || args[1] == "" || !fs.existsSync(args[1])) {
+    console.error("You must specify the mapping file to use.");
+    process.exit(1); 
+}
+
+const mapping = JSON.parse(fs.readFileSync(args[1], "utf-8"));
 template.Mappings = mapping;
 
-processEmbeddedLines(__dirname + '/embedded_server.sh').then(t => {
-    template.Resources.ServerLaunchTemplate.Properties.LaunchTemplateData.UserData = t;
-    return processEmbeddedLines(__dirname + '/embedded_gateway.sh');
-}).then(x => {
-    template.Resources.SyncGatewayLaunchTemplate.Properties.LaunchTemplateData.UserData = x;
+if (!args[2] || args[2] == "" || !fs.existsSync(args[1])) {
+    console.error("You must specify the shell file to use.");
+    process.exit(1); 
+}
+
+templatetype="Server"
+if (args[3] && args[3] != "" && args[3] == "sync_gateway") {
+    templatetype = "SyncGateway" 
+}
+
+processEmbeddedLines(args[2]).then(x => {
+    if (templatetype == "Server") {
+        template.Resources.ServerLaunchTemplate.Properties.LaunchTemplateData.UserData = x;
+    } else {
+        template.Resources.SyncGatewayLaunchTemplate.Properties.LaunchTemplateData.UserData = x;
+    }
     console.log(JSON.stringify(template, null, 4));
 });
 

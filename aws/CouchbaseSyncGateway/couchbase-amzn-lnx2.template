@@ -1,35 +1,8 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Couchbase Enterprise Edition Server on Amazon Linux 2",
+    "Description": "Couchbase Sync Gateway on Amazon Linux 2",
     "Mappings": {},
     "Parameters": {
-        "ServerInstanceCount": {
-            "Description": "Number of Couchbase Server Nodes",
-            "Type": "Number",
-            "Default": 3
-        },
-        "ServerDiskSize": {
-            "Description": "Size in GB of the EBS gp2 volume on each Couchbase node",
-            "Type": "Number",
-            "Default": 100
-        },
-        "ServerVersion": {
-            "Description": "Couchbase Server Version",
-            "Type": "String",
-            "Default": "6.6.2",
-            "AllowedValues": [
-                "6.6.2",
-                "6.6.1",
-                "6.6.0",
-                "6.5.1",
-                "6.5.0",
-                "6.0.4",
-                "6.0.3",
-                "6.0.2",
-                "6.0.1",
-                "6.0.0"
-            ]
-        },
         "SyncGatewayInstanceCount": {
             "Description": "Number of Couchbase Sync Gateway Nodes",
             "Type": "Number",
@@ -57,68 +30,6 @@
                 "2.0.3",
                 "1.5.1",
                 "1.5.2"
-            ]
-        },
-        "InstanceType": {
-            "Description": "Instance type for Couchbase Nodes",
-            "Type": "String",
-            "Default": "m5.xlarge",
-            "AllowedValues": [
-                "c5n.xlarge",
-                "t3.medium",
-                "m4.large",
-                "m4.xlarge",
-                "m4.2xlarge",
-                "m4.4xlarge",
-                "m4.10xlarge",
-                "m4.16xlarge",
-                "m5.large",
-                "m5.xlarge",
-                "m5.2xlarge",
-                "m5.4xlarge",
-                "m5.12xlarge",
-                "m5a.large",
-                "m5a.xlarge",
-                "m5a.2xlarge",
-                "m5a.4xlarge",
-                "m5a.12xlarge",
-                "c4.large",
-                "c4.xlarge",
-                "c4.2xlarge",
-                "c4.4xlarge",
-                "c4.8xlarge",
-                "c5.large",
-                "c5.xlarge",
-                "c5.2xlarge",
-                "c5.4xlarge",
-                "c5.9xlarge",
-                "c5d.large",
-                "c5d.xlarge",
-                "c5d.2xlarge",
-                "c5d.4xlarge",
-                "c5d.9xlarge",
-                "r4.large",
-                "r4.xlarge",
-                "r4.2xlarge",
-                "r4.4xlarge",
-                "r4.8xlarge",
-                "r4.16xlarge",
-                "r5.large",
-                "r5.xlarge",
-                "r5.2xlarge",
-                "r5.4xlarge",
-                "r5.16xlarge",
-                "r5a.large",
-                "r5a.xlarge",
-                "r5a.2xlarge",
-                "r5a.4xlarge",
-                "r5a.12xlarge",
-                "i3.large",
-                "i3.xlarge",
-                "i3.2xlarge",
-                "i3.4xlarge",
-                "i3.8xlarge",
-                "i3.16xlarge"
             ]
         },
         "SyncGatewayInstanceType": {
@@ -181,50 +92,13 @@
             "Description": "VPC Identifier"
         },
         "SubnetList": {
-            "Description": "Subnet List",
+            "Description": "Subnet List (Note:  If you select a private subnet without egress to the internet, the template will fail to deploy correctly)",
             "Type": "List<AWS::EC2::Subnet::Id>"
-        }
-    },
-    "Conditions": {
-        "InstallSyncGateway": {
-            "Fn::Not": [
-                {
-                    "Fn::Equals": [
-                        {
-                            "Ref": "SyncGatewayInstanceCount"
-                        },
-                        0
-                    ]
-                }
-            ]
-        },
-        "InstallCouchbaseServer": {
-            "Fn::Not": [
-                {
-                    "Fn::Equals": [
-                        {
-                            "Ref": "ServerInstanceCount"
-                        },
-                        0
-                    ]
-                }
-            ]
-        },
-        "Install": {
-            "Fn::Or": [
-                {
-                    "Condition": "InstallCouchbaseServer"
-                },
-                {
-                    "Condition": "InstallSyncGateway"
-                }
-            ]
         }
     },
     "Resources": {
         "UsernameParameter": {
             "Type": "AWS::SSM::Parameter",
-            "Condition": "Install",
             "Properties": {
                 "DataType": "text",
                 "Description": "Couchbase Admin Username",
@@ -248,7 +122,6 @@
         },
         "PasswordParameter": {
             "Type": "AWS::SSM::Parameter",
-            "Condition": "Install",
             "Properties": {
                 "DataType": "text",
                 "Description": "Couchbase Admin Password",
@@ -270,106 +143,8 @@
                 }
             }
         },
-        "ServerAutoScalingGroup": {
-            "Type": "AWS::AutoScaling::AutoScalingGroup",
-            "Condition": "InstallCouchbaseServer",
-            "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
-                },
-                "LaunchTemplate": {
-                    "LaunchTemplateId": {
-                        "Ref": "ServerLaunchTemplate"
-                    },
-                    "Version": {
-                        "Fn::GetAtt": [
-                            "ServerLaunchTemplate",
-                            "LatestVersionNumber"
-                        ]
-                    }
-                },
-                "MinSize": 0,
-                "MaxSize": 100,
-                "DesiredCapacity": {
-                    "Ref": "ServerInstanceCount"
-                }
-            },
-            "CreationPolicy": {
-                "ResourceSignal": {
-                    "Count": {
-                        "Ref": "ServerInstanceCount"
-                    },
-                    "Timeout": "PT15M"
-                }
-            },
-            "DependsOn": [
-                "UsernameParameter",
-                "PasswordParameter"
-            ]
-        },
-        "ServerLaunchTemplate": {
-            "Type": "AWS::EC2::LaunchTemplate",
-            "Condition": "InstallCouchbaseServer",
-            "Properties": {
-                "LaunchTemplateData": {
-                    "ImageId": {
-                        "Fn::FindInMap": [
-                            "CouchbaseServer",
-                            {
-                                "Ref": "AWS::Region"
-                            },
-                            "AMI"
-                        ]
-                    },
-                    "InstanceType": {
-                        "Ref": "InstanceType"
-                    },
-                    "SecurityGroupIds": [
-                        {
-                            "Fn::GetAtt": [
-                                "CouchbaseServerSecurityGroup",
-                                "GroupId"
-                            ]
-                        }
-                    ],
-                    "KeyName": {
-                        "Ref": "KeyName"
-                    },
-                    "EbsOptimized": true,
-                    "IamInstanceProfile": {
-                        "Arn": {
-                            "Fn::GetAtt": [
-                                "CouchbaseInstanceProfile",
-                                "Arn"
-                            ]
-                        }
-                    },
-                    "BlockDeviceMappings": [
-                        {
-                            "DeviceName": "/dev/xvda",
-                            "Ebs": {
-                                "VolumeType": "gp3",
-                                "DeleteOnTermination": true
-                            }
-                        },
-                        {
-                            "DeviceName": "/dev/sdk",
-                            "Ebs": {
-                                "VolumeSize": {
-                                    "Ref": "ServerDiskSize"
-                                },
-                                "VolumeType": "gp3",
-                                "Encrypted": true
-                            }
-                        }
-                    ],
-                    "UserData": {}
-                }
-            }
-        },
         "SyncGatewayAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
-            "Condition": "InstallSyncGateway",
             "Properties": {
                 "AvailabilityZones": {
                     "Fn::GetAZs": ""
@@ -403,7 +178,7 @@
                     },
                     "Timeout": "PT15M"
                 }
-            },
+              },
             "DependsOn": [
                 "UsernameParameter",
                 "PasswordParameter"
@@ -411,7 +186,6 @@
         },
         "SyncGatewayLaunchTemplate": {
             "Type": "AWS::EC2::LaunchTemplate",
-            "Condition": "InstallSyncGateway",
             "Properties": {
                 "LaunchTemplateData": {
                     "ImageId": {
@@ -455,13 +229,13 @@
                             }
                         }
                     ],
-                    "UserData": {}
+                    "UserData": {
+                    }
                 }
             }
         },
         "GatewayLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-            "Condition": "InstallSyncGateway",
             "Properties": {
                 "AvailabilityZones": {
                     "Fn::GetAZs": ""
@@ -495,7 +269,6 @@
         },
         "CouchbaseInstanceProfile": {
             "Type": "AWS::IAM::InstanceProfile",
-            "Condition": "Install",
             "Properties": {
                 "Roles": [
                     {
@@ -506,7 +279,6 @@
         },
         "CouchbaseRole": {
             "Type": "AWS::IAM::Role",
-            "Condition": "Install",
             "Properties": {
                 "AssumeRolePolicyDocument": {
                     "Version": "2012-10-17",
@@ -547,88 +319,13 @@
                 ]
             }
         },
-        "CouchbaseServerSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Condition": "InstallCouchbaseServer",
-            "Properties": {
-                "GroupDescription": "Enable SSH and Couchbase Ports",
-                "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 22,
-                        "ToPort": 22,
-                        "CidrIp": {
-                            "Ref": "SSHCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 4369,
-                        "ToPort": 4369,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 4984,
-                        "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 8091,
-                        "ToPort": 8096,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 9100,
-                        "ToPort": 9105,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 9110,
-                        "ToPort": 9122,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 9130,
-                        "ToPort": 9130,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 9998,
-                        "ToPort": 9999,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 11207,
-                        "ToPort": 11215,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 18091,
-                        "ToPort": 18096,
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 21100,
-                        "ToPort": 21299,
-                        "CidrIp": "0.0.0.0/0"
-                    }
-                ]
-            }
-        },
         "SyncGatewaySecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
-            "Condition": "InstallSyncGateway",
             "Properties": {
                 "GroupDescription": "Enable SSH and Sync Gateway Ports",
+                "VpcId": {
+                    "Ref": "VpcName"
+                },
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",

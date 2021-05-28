@@ -25,9 +25,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15.x'
-      - name: Build Templates
+      - name: Build Combined Templates
         run: bash $GITHUB_WORKSPACE/aws/CouchbaseServerAndSyncGateway/makeArchives.sh
-      - name: Upload CBS BYOL Package
+      - name: Upload CBS BYOL
         id: upload-cbs-byol-asset
         uses: actions/upload-release-asset@v1
         env:
@@ -37,7 +37,7 @@ jobs:
           asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-byol.template
           asset_name: aws-cbs-byol.template
           asset_content_type: application/json
-      - name: Upload CBS Hourly Package
+      - name: Upload CBS Hourly
         id: upload-cbs-hourly-asset
         uses: actions/upload-release-asset@v1
         env:
@@ -47,24 +47,28 @@ jobs:
           asset_path: ./build/aws/CouchbaseServerAndSyncGateway/aws-cbs-hourly-pricing.template
           asset_name: aws-cbs-hourly-pricing.template
           asset_content_type: application/json
-      - name: Upload SG BYOL Package
-        id: upload-sg-byol-asset
+      - name: Build Server Template
+        run: bash $GITHUB_WORKSPACE/aws/CouchbaseServer/makeArchives.sh
+      - name: Upload Server Template
+        id: upload-server-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./aws/CouchbaseSyncGateway/couchbase-syncgateway-byol-amzn-lnx2.template
+          asset_path: ./build/aws/CouchbaseServer/aws-cb-server.template
           asset_name: aws-sg-byol.template
           asset_content_type: application/json
-      - name: Upload SG Hourly Package
-        id: upload-sg-hourly-asset
+      - name: Build Gateway Template
+        run: bash $GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/makeArchives.sh
+      - name: Upload Gateway Template
+        id: upload-gateway-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./build/aws/CouchbaseSyncGateway/couchbase-hourlypricing-amzn-lnx2.template
+          asset_path: ./build/aws/CouchbaseSyncGateway/aws-cb-syncgateway.template
           asset_name: aws-sg-hourly-pricing.template
           asset_content_type: application/json
         
