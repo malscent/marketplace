@@ -11,7 +11,7 @@ yum install jq aws-cfn-bootstrap -q -y
 VERSION=$__SyncGatewayVersion__
 # shellcheck disable=SC2154
 stackName=$__AWSStackName__
-
+resource="SyncGatewayAutoScalingGroup"
 region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 
