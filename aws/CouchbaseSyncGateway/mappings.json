@@ -1,0 +1,49 @@
+{
+    "CouchbaseSyncGateway": {
+        "ap-northeast-1": {
+            "AMI": "ami-0d1faa24b7052bc9c"
+        },
+        "ap-northeast-2": {
+            "AMI": "ami-054b045d2f4e6d048"
+        },
+        "ap-south-1": {
+            "AMI": "ami-05b902554433cccb6"
+        },
+        "ap-southeast-1": {
+            "AMI": "ami-0782763e8b5a7b08a"
+        },
+        "ap-southeast-2": {
+            "AMI": "ami-02480d0f5c04f1843"
+        },
+        "ca-central-1": {
+            "AMI": "ami-054166045356693aa"
+        },
+        "eu-central-1": {
+            "AMI": "ami-0ff950650c393fd0a"
+        },
+        "eu-west-1": {
+            "AMI": "ami-0c8f94b38e9787f7e"
+        },
+        "eu-west-2": {
+            "AMI": "ami-0df44a7b664cf74b2"
+        },
+        "eu-west-3": {
+            "AMI": "ami-9e8d3de3"
+        },
+        "sa-east-1": {
+            "AMI": "ami-08d5be9331edafa80"
+        },
+        "us-east-1": {
+            "AMI": "ami-037541b4c352434ff"
+        },
+        "us-east-2": {
+            "AMI": "ami-0e3daf71b6f23fd0e"
+        },
+        "us-west-1": {
+            "AMI": "ami-0053cb76d843d8c71"
+        },
+        "us-west-2": {
+            "AMI": "ami-0931244a3a7e48b10"
+        }
+    }
+}

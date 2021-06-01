@@ -3,15 +3,15 @@
 set -eu
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-echo "Before Make Archives : $SCRIPT_DIR"
 ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
-                                 -s "${SCRIPT_DIR}/embedded_gateway.sh" \
-                                 -o "${SCRIPT_DIR}/../../build/aws/CouchbaseSyncGateway/" \
-                                 -n "aws-cb-syncgateway.template" \
+                                 -s "${SCRIPT_DIR}/embedded_server.sh" \
+                                 -o "${SCRIPT_DIR}/../../build/aws/CouchbaseServer/" \
+                                 -n "aws-cb-server.template" \
                                  -i "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" \
-                                 -t "sync_gateway"
+                                 -t "server"
+
 STACK_NAME=$1
-TEMPLATE_BODY="file://${SCRIPT_DIR}/../../build/aws/CouchbaseSyncGateway/aws-cb-syncgateway.template"
+TEMPLATE_BODY="file://${SCRIPT_DIR}/../../build/aws/CouchbaseServer/aws-cb-server.template"
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
 REGION=$(aws configure get region)
@@ -24,8 +24,8 @@ Password="foo123!"
 KeyName="couchbase-${REGION}"
 #KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
-SyncGatewayInstanceCount=$2
-SyncGatewayVersion=$3
+ServerInstanceCount=$2
+ServerVersion=$3
 VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
 
@@ -39,8 +39,8 @@ ParameterKey=Username,ParameterValue=${Username} \
 ParameterKey=Password,ParameterValue=${Password} \
 ParameterKey=KeyName,ParameterValue="${KeyName}" \
 ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
-ParameterKey=SyncGatewayInstanceCount,ParameterValue="${SyncGatewayInstanceCount}" \
-ParameterKey=SyncGatewayVersion,ParameterValue="${SyncGatewayVersion}" \
+ParameterKey=ServerInstanceCount,ParameterValue="${ServerInstanceCount}" \
+ParameterKey=ServerVersion,ParameterValue="${ServerVersion}" \
 ParameterKey=VpcName,ParameterValue="${VpcName}" \
 ParameterKey=SubnetList,ParameterValue="${SubnetId}"
 
