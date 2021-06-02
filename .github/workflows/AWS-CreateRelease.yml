@@ -48,7 +48,15 @@ jobs:
           asset_name: aws-cbs-hourly-pricing.template
           asset_content_type: application/json
       - name: Build Server Template
-        run: bash $GITHUB_WORKSPACE/aws/CouchbaseServer/makeArchives.sh
+        run: |
+          bash $GITHUB_WORKSPACE/aws/makeArchives.sh \
+                                 -m "$GITHUB_WORKSPACE/aws/CouchbaseServer/mappings.json" \
+                                 -s "$GITHUB_WORKSPACE/aws/CouchbaseServer/embedded_server.sh" \
+                                 -o "$GITHUB_WORKSPACE/build/aws/CouchbaseServer/" \
+                                 -n "aws-cb-server.template" \
+                                 -i "$GITHUB_WORKSPACE/aws/CouchbaseServer/couchbase-amzn-lnx2.template" \
+                                 -t "server"
+      
       - name: Upload Server Template
         id: upload-server-asset
         uses: actions/upload-release-asset@v1
@@ -60,7 +68,14 @@ jobs:
           asset_name: aws-sg-byol.template
           asset_content_type: application/json
       - name: Build Gateway Template
-        run: bash $GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/makeArchives.sh
+        run: |
+          bash $GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/makeArchives.sh \
+                                 -m "$GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/mappings.json" \
+                                 -s "$GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/embedded_gateway.sh" \
+                                 -o "$GITHUB_WORKSPACE/build/aws/CouchbaseSyncGateway/" \
+                                 -n "aws-cb-syncgateway.template" \
+                                 -i "$GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/couchbase-amzn-lnx2.template" \
+                                 -t "sync_gateway"
       - name: Upload Gateway Template
         id: upload-gateway-asset
         uses: actions/upload-release-asset@v1
