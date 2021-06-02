@@ -65,11 +65,11 @@ jobs:
         with: 
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./build/aws/CouchbaseServer/aws-cb-server.template
-          asset_name: aws-sg-byol.template
+          asset_name: aws-cb-server.template
           asset_content_type: application/json
       - name: Build Gateway Template
         run: |
-          bash $GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/makeArchives.sh \
+          bash $GITHUB_WORKSPACE/aws/makeArchives.sh \
                                  -m "$GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/mappings.json" \
                                  -s "$GITHUB_WORKSPACE/aws/CouchbaseSyncGateway/embedded_gateway.sh" \
                                  -o "$GITHUB_WORKSPACE/build/aws/CouchbaseSyncGateway/" \
@@ -84,6 +84,6 @@ jobs:
         with: 
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./build/aws/CouchbaseSyncGateway/aws-cb-syncgateway.template
-          asset_name: aws-sg-hourly-pricing.template
+          asset_name: aws-cb-syncgateway.template
           asset_content_type: application/json
         
