@@ -23,6 +23,9 @@ ServerInstanceCount=$3
 ServerVersion=$4
 SyncGatewayInstanceCount=$5
 SyncGatewayVersion=$6
+VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
+SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
+
 
 aws cloudformation create-stack \
 --capabilities CAPABILITY_IAM \
@@ -37,8 +40,9 @@ ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
 ParameterKey=ServerInstanceCount,ParameterValue="${ServerInstanceCount}" \
 ParameterKey=ServerVersion,ParameterValue="${ServerVersion}" \
 ParameterKey=SyncGatewayInstanceCount,ParameterValue="${SyncGatewayInstanceCount}" \
-ParameterKey=SyncGatewayVersion,ParameterValue="${SyncGatewayVersion}"
-
+ParameterKey=SyncGatewayVersion,ParameterValue="${SyncGatewayVersion}" \
+ParameterKey=VpcName,ParameterValue="${VpcName}" \
+ParameterKey=SubnetList,ParameterValue="${SubnetId}"
 
 Output=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
 Counter=0
