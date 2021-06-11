@@ -32,9 +32,9 @@ aws ec2 create-tags \
 
 CLUSTER_HOST=$(curl -s  http://169.254.169.254/latest/meta-data/public-hostname)
 
-# https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.7/couchbase_installer.sh gets replaced during build
+# __SCRIPT_URL__ gets replaced during build
 if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.7/couchbase_installer.sh"
+    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
 fi
 
 bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g
