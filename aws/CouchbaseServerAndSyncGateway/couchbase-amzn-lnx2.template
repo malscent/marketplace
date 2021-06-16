@@ -27,8 +27,7 @@
                 "6.0.3",
                 "6.0.2",
                 "6.0.1",
-                "6.0.0",
-                "7.0.0-beta"
+                "6.0.0"
             ]
         },
         "SyncGatewayInstanceCount": {
@@ -285,9 +284,6 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Condition": "InstallCouchbaseServer",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
-                },
                 "LaunchTemplate": {
                     "LaunchTemplateId": {
                         "Ref": "ServerLaunchTemplate"
@@ -299,10 +295,13 @@
                         ]
                     }
                 },
-                "MinSize": 0,
-                "MaxSize": 100,
+                "MinSize": "0",
+                "MaxSize": "100",
                 "DesiredCapacity": {
                     "Ref": "ServerInstanceCount"
+                },
+                "VPCZoneIdentifier": {
+                    "Ref": "SubnetList"
                 }
             },
             "CreationPolicy": {
@@ -382,9 +381,6 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Condition": "InstallSyncGateway",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
-                },
                 "LaunchTemplate": {
                     "LaunchTemplateId": {
                         "Ref": "SyncGatewayLaunchTemplate"
@@ -396,8 +392,8 @@
                         ]
                     }
                 },
-                "MinSize": 0,
-                "MaxSize": 100,
+                "MinSize": "0",
+                "MaxSize": "100",
                 "LoadBalancerNames": [
                     {
                         "Ref": "GatewayLoadBalancer"
@@ -405,6 +401,9 @@
                 ],
                 "DesiredCapacity": {
                     "Ref": "SyncGatewayInstanceCount"
+                },
+                "VPCZoneIdentifier": {
+                    "Ref": "SubnetList"
                 }
             },
             "CreationPolicy": {
@@ -563,9 +562,19 @@
             "Condition": "InstallCouchbaseServer",
             "Properties": {
                 "GroupDescription": "Enable SSH and Couchbase Ports",
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -574,63 +583,93 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 4369,
                         "ToPort": 4369,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 4984,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 8091,
                         "ToPort": 8096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 9100,
                         "ToPort": 9105,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 9110,
                         "ToPort": 9122,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 9130,
                         "ToPort": 9130,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 9998,
                         "ToPort": 9999,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 11207,
                         "ToPort": 11215,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 18091,
                         "ToPort": 18096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Inbound",
                         "FromPort": 21100,
                         "ToPort": 21299,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }
@@ -640,9 +679,19 @@
             "Condition": "InstallSyncGateway",
             "Properties": {
                 "GroupDescription": "Enable SSH and Sync Gateway Ports",
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "SSH Inbound Port",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -651,21 +700,30 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Sync Gateway Inbound",
                         "FromPort": 4984,
                         "ToPort": 4984,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Sync Gateway Inbound",
                         "FromPort": 4985,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Sync Gateway Inbound",
                         "FromPort": 4986,
                         "ToPort": 4986,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }

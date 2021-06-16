@@ -27,8 +27,7 @@
                 "6.0.3",
                 "6.0.2",
                 "6.0.1",
-                "6.0.0",
-                "7.0.0-beta"
+                "6.0.0"
             ]
         },
         "InstanceType": {
@@ -321,7 +320,9 @@
                                         "autoscaling:DescribeAutoScalingGroups",
                                         "ssm:GetParameter"
                                     ],
-                                    "Resource": "*"
+                                    "Resource": [
+                                       "*"
+                                    ]
                                 }
                             ]
                         }
@@ -336,9 +337,19 @@
                 "VpcId": {
                     "Ref": "VpcName"
                 },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "SSH Ingress port",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -347,63 +358,93 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 4369,
                         "ToPort": 4369,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 4984,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Admin API Port",
                         "FromPort": 8091,
                         "ToPort": 8096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9100,
                         "ToPort": 9105,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9110,
                         "ToPort": 9122,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":{
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9130,
                         "ToPort": 9130,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9998,
                         "ToPort": 9999,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 11207,
                         "ToPort": 11215,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 18091,
                         "ToPort": 18096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 21100,
                         "ToPort": 21299,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }

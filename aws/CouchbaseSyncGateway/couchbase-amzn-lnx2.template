@@ -146,9 +146,6 @@
         "SyncGatewayAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
-                },
                 "LaunchTemplate": {
                     "LaunchTemplateId": {
                         "Ref": "SyncGatewayLaunchTemplate"
@@ -160,8 +157,8 @@
                         ]
                     }
                 },
-                "MinSize": 0,
-                "MaxSize": 100,
+                "MinSize": "0",
+                "MaxSize": "100",
                 "LoadBalancerNames": [
                     {
                         "Ref": "GatewayLoadBalancer"
@@ -169,6 +166,9 @@
                 ],
                 "DesiredCapacity": {
                     "Ref": "SyncGatewayInstanceCount"
+                },
+                "VPCZoneIdentifier": {
+                    "Ref": "SubnetList"
                 }
             },
             "CreationPolicy": {
@@ -240,7 +240,7 @@
                 "AvailabilityZones": {
                     "Fn::GetAZs": ""
                 },
-                "CrossZone": "true",
+                "CrossZone": true,
                 "Listeners": [
                     {
                         "LoadBalancerPort": "4984",
@@ -311,7 +311,9 @@
                                         "autoscaling:DescribeAutoScalingGroups",
                                         "ssm:GetParameter"
                                     ],
-                                    "Resource": "*"
+                                    "Resource": [
+                                        "*"
+                                    ]
                                 }
                             ]
                         }
@@ -326,9 +328,19 @@
                 "VpcId": {
                     "Ref": "VpcName"
                 },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "SSH Port",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -337,21 +349,30 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4984,
                         "ToPort": 4984,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4985,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4986,
                         "ToPort": 4986,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }
