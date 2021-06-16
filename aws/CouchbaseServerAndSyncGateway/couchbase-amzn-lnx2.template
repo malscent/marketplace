@@ -561,6 +561,9 @@
             "Type": "AWS::EC2::SecurityGroup",
             "Condition": "InstallCouchbaseServer",
             "Properties": {
+                "VpcId": {
+                    "Ref": "VpcName"
+                },
                 "GroupDescription": "Enable SSH and Couchbase Ports",
                 "SecurityGroupEgress": [
                     {
@@ -678,6 +681,9 @@
             "Type": "AWS::EC2::SecurityGroup",
             "Condition": "InstallSyncGateway",
             "Properties": {
+                "VpcId": {
+                    "Ref": "VpcName"
+                },
                 "GroupDescription": "Enable SSH and Sync Gateway Ports",
                 "SecurityGroupEgress": [
                     {
