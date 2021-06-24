@@ -16,15 +16,17 @@ if [ -z "$REGION" ]; then
 fi
 Username="couchbase"
 Password="foo123!"
-#KeyName="couchbase-${REGION}"
-KeyName="ja-test-kp"
+KeyName="couchbase-${REGION}"
+#KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
 ServerInstanceCount=$3
 ServerVersion=$4
 SyncGatewayInstanceCount=$5
 SyncGatewayVersion=$6
 VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
+#VpcName=vpc-0c1cd329084365f10
 SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
+#SubnetId=subnet-08476a90d895839b4
 
 
 aws cloudformation create-stack \

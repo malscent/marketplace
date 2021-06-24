@@ -1,6 +1,25 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Couchbase Sync Gateway on Amazon Linux 2",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": { "default": "Network Configuration/Access" },
+                    "Parameters": ["VpcName", "SubnetList", "SSHCIDR", "KeyName"]
+                },
+                {
+                    "Label": { "default": "Sync Gateway Configuration" },
+                    "Parameters": ["SyncGatewayInstanceCount", "SyncGatewayVersion", "SyncGatewayInstanceType", "Username", "Password"]
+                }
+            ],
+            "ParameterLabels": {
+                "SSHCIDR": { "default": "Access CIDR" },
+                "Username": { "default": "Database Username"},
+                "Password": { "default": "Database Password"}
+            }
+        }
+    },
     "Mappings": {},
     "Parameters": {
         "SyncGatewayInstanceCount": {
@@ -97,49 +116,36 @@
         }
     },
     "Resources": {
-        "UsernameParameter": {
-            "Type": "AWS::SSM::Parameter",
+        "CouchbaseSecret": {
+            "Type": "AWS::SecretsManager::Secret",
             "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Username",
                 "Name": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
                             {
                                 "Ref": "AWS::StackName"
                             },
-                            "/cb_username"
+                            "-CouchbaseSecret"
                         ]
                     ]
                 },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Username"
-                }
-            }
-        },
-        "PasswordParameter": {
-            "Type": "AWS::SSM::Parameter",
-            "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Password",
-                "Name": {
+                "Description": "Couchbase Admin Username/Password Secret",
+                "SecretString": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
+                            "{\"username\": \"",
                             {
-                                "Ref": "AWS::StackName"
+                                "Ref": "Username"
                             },
-                            "/cb_password"
+                            "\", \"password\":\"",
+                            {
+                                "Ref": "Password"
+                            },
+                            "\"}"
                         ]
                     ]
-                },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Password"
                 }
             }
         },
@@ -180,8 +186,7 @@
                 }
               },
             "DependsOn": [
-                "UsernameParameter",
-                "PasswordParameter"
+                "CouchbaseSecret"
             ]
         },
         "SyncGatewayLaunchTemplate": {
@@ -237,8 +242,8 @@
         "GatewayLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
+                "Subnets": {
+                    "Ref": "SubnetList"
                 },
                 "CrossZone": true,
                 "Listeners": [
@@ -309,7 +314,8 @@
                                         "ec2:DescribeTags",
                                         "ec2:DescribeInstances",
                                         "autoscaling:DescribeAutoScalingGroups",
-                                        "ssm:GetParameter"
+                                        "ssm:GetParameter",
+                                        "secretsmanager:GetSecretValue"
                                     ],
                                     "Resource": [
                                         "*"
