@@ -1,6 +1,25 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Couchbase Sync Gateway on Amazon Linux 2",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": { "default": "Network Configuration/Access" },
+                    "Parameters": ["VpcName", "SubnetList", "SSHCIDR", "KeyName"]
+                },
+                {
+                    "Label": { "default": "Sync Gateway Configuration" },
+                    "Parameters": ["SyncGatewayInstanceCount", "SyncGatewayVersion", "SyncGatewayInstanceType", "Username", "Password"]
+                }
+            ],
+            "ParameterLabels": {
+                "SSHCIDR": { "default": "Access CIDR" },
+                "Username": { "default": "Database Username"},
+                "Password": { "default": "Database Password"}
+            }
+        }
+    },
     "Mappings": {},
     "Parameters": {
         "SyncGatewayInstanceCount": {
@@ -97,58 +116,42 @@
         }
     },
     "Resources": {
-        "UsernameParameter": {
-            "Type": "AWS::SSM::Parameter",
+        "CouchbaseSecret": {
+            "Type": "AWS::SecretsManager::Secret",
             "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Username",
                 "Name": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
                             {
                                 "Ref": "AWS::StackName"
                             },
-                            "/cb_username"
+                            "-CouchbaseSecret"
                         ]
                     ]
                 },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Username"
-                }
-            }
-        },
-        "PasswordParameter": {
-            "Type": "AWS::SSM::Parameter",
-            "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Password",
-                "Name": {
+                "Description": "Couchbase Admin Username/Password Secret",
+                "SecretString": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
+                            "{\"username\": \"",
                             {
-                                "Ref": "AWS::StackName"
+                                "Ref": "Username"
                             },
-                            "/cb_password"
+                            "\", \"password\":\"",
+                            {
+                                "Ref": "Password"
+                            },
+                            "\"}"
                         ]
                     ]
-                },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Password"
                 }
             }
         },
         "SyncGatewayAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
-                },
                 "LaunchTemplate": {
                     "LaunchTemplateId": {
                         "Ref": "SyncGatewayLaunchTemplate"
@@ -160,8 +163,8 @@
                         ]
                     }
                 },
-                "MinSize": 0,
-                "MaxSize": 100,
+                "MinSize": "0",
+                "MaxSize": "100",
                 "LoadBalancerNames": [
                     {
                         "Ref": "GatewayLoadBalancer"
@@ -169,6 +172,9 @@
                 ],
                 "DesiredCapacity": {
                     "Ref": "SyncGatewayInstanceCount"
+                },
+                "VPCZoneIdentifier": {
+                    "Ref": "SubnetList"
                 }
             },
             "CreationPolicy": {
@@ -180,8 +186,7 @@
                 }
               },
             "DependsOn": [
-                "UsernameParameter",
-                "PasswordParameter"
+                "CouchbaseSecret"
             ]
         },
         "SyncGatewayLaunchTemplate": {
@@ -237,10 +242,10 @@
         "GatewayLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties": {
-                "AvailabilityZones": {
-                    "Fn::GetAZs": ""
+                "Subnets": {
+                    "Ref": "SubnetList"
                 },
-                "CrossZone": "true",
+                "CrossZone": true,
                 "Listeners": [
                     {
                         "LoadBalancerPort": "4984",
@@ -309,9 +314,12 @@
                                         "ec2:DescribeTags",
                                         "ec2:DescribeInstances",
                                         "autoscaling:DescribeAutoScalingGroups",
-                                        "ssm:GetParameter"
+                                        "ssm:GetParameter",
+                                        "secretsmanager:GetSecretValue"
                                     ],
-                                    "Resource": "*"
+                                    "Resource": [
+                                        "*"
+                                    ]
                                 }
                             ]
                         }
@@ -326,9 +334,19 @@
                 "VpcId": {
                     "Ref": "VpcName"
                 },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "SSH Port",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -337,21 +355,30 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4984,
                         "ToPort": 4984,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4985,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4986,
                         "ToPort": 4986,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }

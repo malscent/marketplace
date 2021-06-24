@@ -11,15 +11,17 @@ yum install jq aws-cfn-bootstrap -y -q
 stackName=$__AWSStackName__
 # shellcheck disable=SC2154
 VERSION=$__ServerVersion__
-
-resource="ServerAutoScalingGroup"
+# shellcheck disable=SC2154
+SECRET=$__CouchbaseSecret__
 
 region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 resource="ServerAutoScalingGroup"
 
-USERNAME=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_username" --region "$region" | jq -r '.Parameter.Value')
-PASSWORD=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_password" --region "$region" | jq -r '.Parameter.Value')
+
+SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id "${SECRET}" --version-stage AWSCURRENT --region "$region" | jq -r .SecretString)
+USERNAME=$(echo "$SECRET_VALUE" | jq -r .username)
+PASSWORD=$(echo "$SECRET_VALUE" | jq -r .password)
 
 
 rallyAutoscalingGroup=$(aws ec2 describe-instances \
@@ -32,10 +34,9 @@ rallyAutoscalingGroupInstanceIDs=$(aws autoscaling describe-auto-scaling-groups 
                                                        --query 'AutoScalingGroups[*].Instances[*].InstanceId' \
                                                        --auto-scaling-group-name "${rallyAutoscalingGroup}" \
                                                     | jq -r '.[] | .[]')
-
-rallyInstanceID=$(echo "${rallyAutoscalingGroupInstanceIDs}" | cut -d " " -f1)
-
-rallyAutoscalingGroupInstanceIDsArray=("$rallyAutoscalingGroupInstanceIDs")
+# shellcheck disable=SC2206
+IFS=$'\n' rallyAutoscalingGroupInstanceIDsArray=($rallyAutoscalingGroupInstanceIDs)
+rallyInstanceID=${rallyAutoscalingGroupInstanceIDsArray[0]}
 
 for i in "${rallyAutoscalingGroupInstanceIDsArray[@]}"; do
    tags=$(aws ec2 describe-tags --region "${region}"  --filter "Name=tag:Name,Values=*Rally" "Name=resource-id,Values=$i")
@@ -49,9 +50,16 @@ done
 rallyPublicDNS=$(aws ec2 describe-instances \
                             --region "${region}" \
                                  --query  'Reservations[0].Instances[0].NetworkInterfaces[0].Association.PublicDnsName' \
-                                 --instance-ids ${rallyInstanceID} \
+                                 --instance-ids "${rallyInstanceID}" \
                  --output text)
-nodePublicDNS=$(curl -s  http://169.254.169.254/latest/meta-data/public-hostname)
+if [[ "$rallyPublicDNS" == "None" ]]; then
+   rallyPublicDNS=$(aws ec2 describe-instances \
+                            --region "${region}" \
+                                 --query  'Reservations[0].Instances[0].NetworkInterfaces[0].PrivateDnsName' \
+                                 --instance-ids "${rallyInstanceID}" \
+                 --output text)
+fi
+nodePublicDNS=$(curl -sf http://169.254.169.254/latest/meta-data/public-hostname) || nodePublicDNS=$(hostname)
 echo "Using the settings:"
 echo "rallyPublicDNS $rallyPublicDNS"
 echo "region $region"
@@ -72,11 +80,15 @@ else
 fi
 
 CLUSTER_HOST=$rallyPublicDNS
-# __SCRIPT_URL__ gets replaced during build
+# https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh gets replaced during build
 if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
+    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh"
 fi
 
-bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d
-# Calls back to AWS to signify that installation is complete
-/opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
+if bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d; then
+   # Calls back to AWS to signify that installation is complete
+   /opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
+else
+   /opt/aws/bin/cfn-signal -e 1 --stack "$stackName" --resource "$resource" --region "$region"
+   exit 1
+fi

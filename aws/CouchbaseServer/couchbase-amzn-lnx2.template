@@ -1,6 +1,47 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Couchbase Enterprise Edition Server on Amazon Linux 2",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "Network Configuration/Access"
+                    },
+                    "Parameters": [
+                        "VpcName",
+                        "SubnetList",
+                        "SSHCIDR",
+                        "KeyName"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Server Configuration"
+                    },
+                    "Parameters": [
+                        "ServerInstanceCount",
+                        "ServerDiskSize",
+                        "ServerVersion",
+                        "InstanceType",
+                        "Username",
+                        "Password"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "SSHCIDR": {
+                    "default": "Access CIDR"
+                },
+                "Username": {
+                    "default": "Database Username"
+                },
+                "Password": {
+                    "default": "Database Password"
+                }
+            }
+        }
+    },
     "Mappings": {},
     "Parameters": {
         "ServerInstanceCount": {
@@ -136,49 +177,36 @@
         }
     },
     "Resources": {
-        "UsernameParameter": {
-            "Type": "AWS::SSM::Parameter",
+        "CouchbaseSecret": {
+            "Type": "AWS::SecretsManager::Secret",
             "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Username",
                 "Name": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
                             {
                                 "Ref": "AWS::StackName"
                             },
-                            "/cb_username"
+                            "-CouchbaseSecret"
                         ]
                     ]
                 },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Username"
-                }
-            }
-        },
-        "PasswordParameter": {
-            "Type": "AWS::SSM::Parameter",
-            "Properties": {
-                "DataType": "text",
-                "Description": "Couchbase Admin Password",
-                "Name": {
+                "Description": "Couchbase Admin Username/Password Secret",
+                "SecretString": {
                     "Fn::Join": [
                         "",
                         [
-                            "/",
+                            "{\"username\": \"",
                             {
-                                "Ref": "AWS::StackName"
+                                "Ref": "Username"
                             },
-                            "/cb_password"
+                            "\", \"password\":\"",
+                            {
+                                "Ref": "Password"
+                            },
+                            "\"}"
                         ]
                     ]
-                },
-                "Type": "String",
-                "Value": {
-                    "Ref": "Password"
                 }
             }
         },
@@ -212,10 +240,9 @@
                     },
                     "Timeout": "PT15M"
                 }
-              },
+            },
             "DependsOn": [
-                "UsernameParameter",
-                "PasswordParameter"
+                "CouchbaseSecret"
             ]
         },
         "ServerLaunchTemplate": {
@@ -319,9 +346,12 @@
                                         "ec2:DescribeTags",
                                         "ec2:DescribeInstances",
                                         "autoscaling:DescribeAutoScalingGroups",
-                                        "ssm:GetParameter"
+                                        "ssm:GetParameter",
+                                        "secretsmanager:GetSecretValue"
                                     ],
-                                    "Resource": "*"
+                                    "Resource": [
+                                        "*"
+                                    ]
                                 }
                             ]
                         }
@@ -336,9 +366,19 @@
                 "VpcId": {
                     "Ref": "VpcName"
                 },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "Description": "Outbound Access",
+                        "FromPort": 0,
+                        "ToPort": 65535,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "tcp",
+                        "Description": "SSH Ingress port",
                         "FromPort": 22,
                         "ToPort": 22,
                         "CidrIp": {
@@ -347,63 +387,93 @@
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 4369,
                         "ToPort": 4369,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 4984,
                         "ToPort": 4985,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Admin API Port",
                         "FromPort": 8091,
                         "ToPort": 8096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9100,
                         "ToPort": 9105,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9110,
                         "ToPort": 9122,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9130,
                         "ToPort": 9130,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 9998,
                         "ToPort": 9999,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 11207,
                         "ToPort": 11215,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 18091,
                         "ToPort": 18096,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "tcp",
+                        "Description": "Couchbase Server Ports",
                         "FromPort": 21100,
                         "ToPort": 21299,
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SSHCIDR"
+                        }
                     }
                 ]
             }

@@ -11,14 +11,17 @@ yum install jq aws-cfn-bootstrap -q -y
 VERSION=$__SyncGatewayVersion__
 # shellcheck disable=SC2154
 stackName=$__AWSStackName__
+# shellcheck disable=SC2154
+SECRET=$__CouchbaseSecret__
+
+
 resource="SyncGatewayAutoScalingGroup"
 region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 
-USERNAME=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_username" --region "$region" | jq -r '.Parameter.Value')
-PASSWORD=$(aws ssm get-parameter --with-decryption --name  "/${stackName}/cb_password" --region "$region" | jq -r '.Parameter.Value')
-
-resource="SyncGatewayAutoScalingGroup"
+SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id "${SECRET}" --version-stage AWSCURRENT --region "$region" | jq -r .SecretString)
+USERNAME=$(echo "$SECRET_VALUE" | jq -r .username)
+PASSWORD=$(echo "$SECRET_VALUE" | jq -r .password)
 
 
 echo "Using the settings:"
@@ -30,13 +33,17 @@ aws ec2 create-tags \
   --resources "${instanceId}" \
   --tags Key=Name,Value="${stackName}-SyncGateway"
 
-CLUSTER_HOST=$(curl -s  http://169.254.169.254/latest/meta-data/public-hostname)
+CLUSTER_HOST=$(curl -sf http://169.254.169.254/latest/meta-data/public-hostname) || CLUSTER_HOST=$(hostname)
 
-# __SCRIPT_URL__ gets replaced during build
+# https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh gets replaced during build
 if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
+    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh"
 fi
 
-bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g
-# calls back to AWS to signify that installation is complete and the stack can complete.
-/opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
+if bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g; then
+   # Calls back to AWS to signify that installation is complete
+   /opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
+else
+   /opt/aws/bin/cfn-signal -e 1 --stack "$stackName" --resource "$resource" --region "$region"
+   exit 1
+fi
