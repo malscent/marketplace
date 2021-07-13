@@ -13,6 +13,14 @@ on:
         description: "AWS Region"
         required: true
         default: "us-east-1" 
+      version:
+        description: "Couchbase Server/Gateway Version":
+        required: true
+        default: "6.6.2"
+      syncgateway: 
+        description: "Gateway (Y/N)?":
+        required: true
+        default: "N"
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -39,15 +47,33 @@ jobs:
       - name: Echo $GITHUB_WORKSPACE
         run: echo "$GITHUB_WORKSPACE"
       # Runs a set of commands using the runners shell
-      - name: Create AMI
+      - name: Create AMI for Couchbase Server
+        if: ${{ github.event.inputs.name.syncgateway == "N" }}
         env:
           NAME: ${{github.event.inputs.name}}
           REGION: ${{github.event.inputs.region}}
+          GATEWAY: ${{github.event.inputs.syncgateway}}
+          VERSION: ${{github.event.inputs.version}}
         timeout-minutes: 15
         run: |
           bash ${GITHUB_WORKSPACE}/aws/couchbase-ami-creation/create.sh \
                                                                 -r "$REGION" \
-                                                                -n "$NAME" 
+                                                                -n "$NAME" \
+                                                                -v "$VERSION" 
+      - name: Create AMI for Couchbase Sync Gateway
+        if: ${{ github.event.inputs.name.syncgateway == "Y" }}
+        env:
+          NAME: ${{github.event.inputs.name}}
+          REGION: ${{github.event.inputs.region}}
+          GATEWAY: ${{github.event.inputs.syncgateway}}
+          VERSION: ${{github.event.inputs.version}}
+        timeout-minutes: 15
+        run: |
+          bash ${GITHUB_WORKSPACE}/aws/couchbase-ami-creation/create.sh \
+                                                                -r "$REGION" \
+                                                                -n "$NAME" \
+                                                                -v "$VERSION" \
+                                                                -g                                                                
       - name: Upload AMI details
         uses: actions/upload-artifact@v2
         with:

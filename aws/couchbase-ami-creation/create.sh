@@ -31,19 +31,23 @@ function __generate_random_string() {
 #Constants
 INSTANCE_TYPE=m4.xlarge
 SECURITY_GROUP=aws-ami-creation
+VERSION=6.6.2
+GATEWAY=0
 
-while getopts r:n: flag
+while getopts r:n:v:g: flag
 do
     case "${flag}" in
         r) REGION=${OPTARG};;
         n) AMI_NAME=${OPTARG};;
+        v) VERSION=${OPTARG};;
+        g) GATEWAY=1;;
         *) exit 1;;
     esac
 done
 
 # Create Output Folder
 SCRIPT_SOURCE=${BASH_SOURCE[0]/%create.sh/}
-mkdir -p "$SCRIPT_SOURCE../../build/aws/couchbase-ami-creation/"
+mkdir -p "$SCRIPT_SOURCE/../../build/aws/couchbase-ami-creation/"
 
 #Get AMI from AWS for the approved instance type
 BASE_AMI_ID=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 --region "$REGION" | jq -r '.Parameters[] | .Value')
@@ -84,15 +88,22 @@ until [[ "$instanceState" == "running" ]]; do
 done
 sleep 60 #We have to wait until SSH starts up.
 echo "Updating packages on instance"
-ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && echo 'Removing Ec2-User Authorized Keys' && sudo rm -rf /home/ec2-user/.ssh/ && echo 'Removing root Authorized Keys' && sudo rm -rf /root/.ssh/ && exit"
+bash "$SCRIPT_SOURCE/../../script_url_replacer.sh" "${SCRIPT_SOURCE}/rpm_exploder.sh"
+scp -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "${SCRIPT_SOURCE}/rpm_exploder.sh" "ec2-user@$PUBLIC_IP:/home/ec2-user/rpm_exploder.sh"
+
+ssh -i "$HOME/.ssh/aws-keypair.pem" -o StrictHostKeyChecking=no "ec2-user@$PUBLIC_IP" "sudo yum update -y && sudo /usr/bin/bash ~/rpm_exploder.sh ${VERSION} ${GATEWAY} && rm -rf ~/rpm_exploder.sh && echo 'Removing Ec2-User Authorized Keys' && sudo rm -rf /home/ec2-user/.ssh/ && echo 'Removing root Authorized Keys' && sudo rm -rf /root/.ssh/ && exit"
 
 #Create AMI
 echo "Creating AMI:  $AMI_NAME"
 todaysDate=$(date '+%Y-%m-%d %T')
+DESCRIPTION="Auto-generated AMI for Couchbase Server v$VERSION on $todaysDate"
+if [[ "$GATEWAY" == "1" ]]; then
+    DESCRIPTION="Auto-generated AMI for Couchbase Sync Gateway v$VERSION on $todaysDate"
+fi
 imageResponse=$(aws ec2 create-image \
   --instance-id "$INSTANCE_ID" \
   --name "$AMI_NAME" \
-  --description "Auto-generated AMI for Couchbase on $todaysDate" \
+  --description "$DESCRIPTION" \
   --output json)
 
 AMI_ID=$(echo "$imageResponse" | jq -r '.ImageId')

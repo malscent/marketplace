@@ -18,7 +18,6 @@ region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 resource="ServerAutoScalingGroup"
 
-
 SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id "${SECRET}" --version-stage AWSCURRENT --region "$region" | jq -r .SecretString)
 USERNAME=$(echo "$SECRET_VALUE" | jq -r .username)
 PASSWORD=$(echo "$SECRET_VALUE" | jq -r .password)
@@ -81,11 +80,35 @@ fi
 
 CLUSTER_HOST=$rallyPublicDNS
 # __SCRIPT_URL__ gets replaced during build
-if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "__SCRIPT_URL__"
+if [[ ! -e "/setup/couchbase_installer.sh" ]]; then
+    curl -L --output "/setup/couchbase_installer.sh" "__SCRIPT_URL__"
 fi
 
-if bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d; then
+SUCCESS=1
+
+if [[ "$COUCHBASE_SERVER_VERSION" == "$VERSION" ]]; then
+   CLUSTER_MEMBERSHIP=$(curl -q -u "$CB_USERNAME:$CB_PASSWORD" http://127.0.0.1:8091/pools/default | jq -r '') || CLUSTER_MEMBERSHIP="unknown pool"
+   if [[ "$CLUSTER_MEMBERSHIP" != "unknown pool" ]]; then
+      SUCCESS=0
+   else
+      bash /setup/postinstall.sh 0
+      bash /setup/posttransaction.sh 
+      bash /setup/couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d --cluster-only
+      SUCCESS=$?
+   fi
+else
+   # Remove existing
+   rm -rf /usr/lib/systemd/system/couchbase-server.service
+   rm -rf /opt/couchbase/
+   rpm -e "$(rpm -qa | grep couchbase)"
+   # Update /etc/profile.d/couchbaseserver.sh
+   echo "#!/usr/bin/env sh
+export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
+   bash /setup/couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d
+   SUCCESS=$?
+fi
+
+if [[ "$SUCCESS" == "0" ]]; then
    # Calls back to AWS to signify that installation is complete
    /opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
 else
