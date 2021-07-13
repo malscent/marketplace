@@ -24,14 +24,22 @@ Password="foo123!"
 KeyName="couchbase-${REGION}"
 #KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
-ServerInstanceCount=$2
-ServerVersion=$3
+ServerInstanceCountDefault=$(jq '.Parameters.ServerInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+ServerInstanceCount=${2:-$ServerInstanceCountDefault}
+echo "Instance Count: $ServerInstanceCount"
+echo "Default: $ServerInstanceCountDefault"
+ServerVersionDefault=$(jq '.Parameters.ServerVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+ServerVersion=${3:-$ServerVersionDefault}
+echo "GatewayVersion: $ServerVersion"
+echo "Default: $ServerVersionDefault"
+
 VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 #VpcName=vpc-0c1cd329084365f10
 SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
 #SubnetId=subnet-08476a90d895839b4
 
 aws cloudformation create-stack \
+--disable-rollback \
 --capabilities CAPABILITY_IAM \
 --template-body "${TEMPLATE_BODY}" \
 --stack-name "${STACK_NAME}" \

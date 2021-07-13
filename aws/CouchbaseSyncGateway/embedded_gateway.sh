@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-set -x
+set -ex
 echo 'Running startup script...'
+# There is a race condition based on when the env vars are set by profile.d and when cloud-init executes
+# this just removes that race condition
+if [[ -r /etc/profile.d/couchbaseserver.sh ]]; then
+   # Disabling lint for unreachable source file
+   # shellcheck disable=SC1091
+   source /etc/profile.d/couchbaseserver.sh
+fi
 
 yum install jq aws-cfn-bootstrap -q -y
 #These values will be replaced with appropriate values during compilation into the Cloud Formation Template
@@ -13,6 +20,12 @@ VERSION=$__SyncGatewayVersion__
 stackName=$__AWSStackName__
 # shellcheck disable=SC2154
 SECRET=$__CouchbaseSecret__
+# shellcheck disable=SC2154
+CLUSTER_HOST=$__CouchbaseClusterUrl__
+# shellcheck disable=SC2154
+DATABASE=$__DatabaseName__
+# shellcheck disable=SC2154
+BUCKET=$__Bucket__
 
 resource="SyncGatewayAutoScalingGroup"
 
@@ -32,14 +45,92 @@ aws ec2 create-tags \
   --resources "${instanceId}" \
   --tags Key=Name,Value="${stackName}-SyncGateway"
 
-CLUSTER_HOST=$(curl -sf http://169.254.169.254/latest/meta-data/public-hostname) || CLUSTER_HOST=$(hostname)
 
-# https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh gets replaced during build
-if [[ ! -e "couchbase_installer.sh" ]]; then
-    curl -L --output "couchbase_installer.sh" "https://github.com/couchbase-partners/marketplace-scripts/releases/download/v1.0.10/couchbase_installer.sh"
+# __SCRIPT_URL__ gets replaced during build
+if [[ ! -e "/setup/couchbase_installer.sh" ]]; then
+    curl -L --output "/setup/couchbase_installer.sh" "__SCRIPT_URL__"
+fi
+SUCCESS=1
+
+if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
+   curl -q http://127.0.0.1:4985/_admin/ >> /dev/null 2>&1
+   RUNNING=$? 
+   if [[ "$RUNNING" == "0" ]]; then
+      SUCCESS=0
+   else
+      echo "
+{
+  \"logging\": {
+    \"console\": {
+      \"log_keys\": ["*"]
+    }
+  },
+  \"databases\": {
+    \"$DATABASE\": {
+      \"server\": \"$CLUSTER_HOST\",
+      \"username\": \"$USERNAME\",
+      \"password\": \"$PASSWORD\",
+      \"bucket\": \"$BUCKET\",
+      \"users\": {
+        \"GUEST\": {
+          \"disabled\": false,
+          \"admin_channels\": [\"*\"]
+        }
+      },
+      \"allow_conflicts\": false,
+      \"revs_limit\": 20,
+      \"import_docs\": true,
+      \"enable_shared_bucket_access\":true,
+      \"num_index_replicas\":0
+    }
+  }
+}      
+      " > /opt/sync_gateway/etc/sync_gateway.json
+      nohup /usr/bin/sh /setup/postinstall.sh 0 >> /dev/null 2>&1 &
+      nohup /usr/bin/sh /setup/posttransaction.sh >> /dev/null 2>&1 & 
+      SUCCESS=$?
+   fi
+else
+   # Remove existing
+   rpm -e "$(rpm -qa | grep couchbase)"
+   rm -rf /opt/couchbase-sync-gateway/
+   # Update /etc/profile.d/couchbaseserver.sh
+    echo "#!/usr/bin/env sh
+export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
+   echo "
+{
+  \"logging\": {
+    \"console\": {
+      \"log_keys\": ["*"]
+    }
+  },
+  \"databases\": {
+    \"$DATABASE\": {
+      \"server\": \"$CLUSTER_HOST\",
+      \"username\": \"$USERNAME\",
+      \"password\": \"$PASSWORD\",
+      \"bucket\": \"$BUCKET\",
+      \"users\": {
+        \"GUEST\": {
+          \"disabled\": false,
+          \"admin_channels\": [\"*\"]
+        }
+      },
+      \"allow_conflicts\": false,
+      \"revs_limit\": 20,
+      \"import_docs\": true,
+      \"enable_shared_bucket_access\":true,
+      \"num_index_replicas\":0
+    }
+  }
+}      
+   " > /opt/sync_gateway/etc/sync_gateway.json
+   bash /setup/couchbase_installer.sh -ch "http://localhost:8091" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g
+   SUCCESS=$?
+   service sync_gateway restart
 fi
 
-if bash ./couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g; then
+if [[ "$SUCCESS" == "0" ]]; then
    # Calls back to AWS to signify that installation is complete
    /opt/aws/bin/cfn-signal -e 0 --stack "$stackName" --resource "$resource" --region "$region"
 else

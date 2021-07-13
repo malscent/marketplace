@@ -24,8 +24,22 @@ Password="foo123!"
 KeyName="couchbase-${REGION}"
 #KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
-SyncGatewayInstanceCount=$2
-SyncGatewayVersion=$3
+
+SyncGatewayInstanceCountDefault=$(jq '.Parameters.SyncGatewayInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+SyncGatewayInstanceCount=${2:-$SyncGatewayInstanceCountDefault}
+
+echo "Instance Count: $SyncGatewayInstanceCount"
+echo "Default: $SyncGatewayInstanceCountDefault"
+
+SyncGatewayVersionDefault=$(jq '.Parameters.SyncGatewayVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+SyncGatewayVersion=${3:-$SyncGatewayVersionDefault}
+echo "GatewayVersion: $SyncGatewayVersion"
+echo "Default: $SyncGatewayVersionDefault"
+
+CouchbaseClusterURL=${4:-}
+BucketName=${5:-}
+DatabaseName=${6:-}
+
 VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 #VpcName=vpc-0c1cd329084365f10
 SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
@@ -33,6 +47,7 @@ SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --m
 
 aws cloudformation create-stack \
 --capabilities CAPABILITY_IAM \
+--disable-rollback \
 --template-body "${TEMPLATE_BODY}" \
 --stack-name "${STACK_NAME}" \
 --region "${REGION}" \
@@ -44,7 +59,10 @@ ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
 ParameterKey=SyncGatewayInstanceCount,ParameterValue="${SyncGatewayInstanceCount}" \
 ParameterKey=SyncGatewayVersion,ParameterValue="${SyncGatewayVersion}" \
 ParameterKey=VpcName,ParameterValue="${VpcName}" \
-ParameterKey=SubnetList,ParameterValue="${SubnetId}"
+ParameterKey=SubnetList,ParameterValue="${SubnetId}" \
+ParameterKey=CouchbaseClusterUrl,ParameterValue="$CouchbaseClusterURL" \
+ParameterKey=Bucket,ParameterValue="$BucketName" \
+ParameterKey=DatabaseName,ParameterValue="$DatabaseName" 
 
 
 Output=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')

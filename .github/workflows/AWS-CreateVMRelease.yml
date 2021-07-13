@@ -14,13 +14,17 @@ on:
         required: true
         default: "us-east-1" 
       version:
-        description: "Couchbase Server/Gateway Version":
+        description: "Couchbase Server/Gateway Version"
         required: true
         default: "6.6.2"
       syncgateway: 
-        description: "Gateway (Y/N)?":
+        description: "Gateway (Y/N)?"
         required: true
         default: "N"
+      syncgatewayversion:
+        description: "Couchbase Sync Gateway Version"
+        required: true
+        default: "2.8.2"
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -52,7 +56,6 @@ jobs:
         env:
           NAME: ${{github.event.inputs.name}}
           REGION: ${{github.event.inputs.region}}
-          GATEWAY: ${{github.event.inputs.syncgateway}}
           VERSION: ${{github.event.inputs.version}}
         timeout-minutes: 15
         run: |
@@ -65,8 +68,7 @@ jobs:
         env:
           NAME: ${{github.event.inputs.name}}
           REGION: ${{github.event.inputs.region}}
-          GATEWAY: ${{github.event.inputs.syncgateway}}
-          VERSION: ${{github.event.inputs.version}}
+          VERSION: ${{github.event.inputs.syncgatewayversion}}
         timeout-minutes: 15
         run: |
           bash ${GITHUB_WORKSPACE}/aws/couchbase-ami-creation/create.sh \
