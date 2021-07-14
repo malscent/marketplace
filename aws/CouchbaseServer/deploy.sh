@@ -2,7 +2,44 @@
 
 set -eu
 
+function __generate_random_string() {
+    NEW_UUID=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c 10 ; echo '')
+    echo "${NEW_UUID}"
+}
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+STACK_NAME_DEFAULT="cb_test_stack_$(__generate_random_string)"
+DEFAULT_REGION=$(aws configure get region)
+echo "$DEFAULT_REGION"
+if [ -z "$DEFAULT_REGION" ]; then
+    REGION="us-east-1"
+fi
+ServerInstanceCountDefault=$(jq '.Parameters.ServerInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+ServerVersionDefault=$(jq '.Parameters.ServerVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+
+while getopts n:c:v:k:r:u:p: flag
+do
+    case "${flag}" in
+        n) STACK_NAME=${OPTARG};;
+        c) ServerInstanceCount=${OPTARG};;
+        v) ServerVersion=${OPTARG};;
+        k) KeyName=${OPTARG};;
+        r) REGION=${OPTARG};;
+        u) Username=${OPTARG};;
+        p) Password=${OPTARG};;
+        *) exit 1;;
+    esac
+done
+
+REGION=${REGION:-$DEFAULT_REGION}
+STACK_NAME=${STACK_NAME:-$STACK_NAME_DEFAULT}
+ServerInstanceCount=${ServerInstanceCount:-$ServerInstanceCountDefault}
+ServerVersion=${ServerVersion:-$ServerVersionDefault}
+KeyName=${KeyName:-"couchbase-${REGION}"}
+Username=${Username:-"couchbase"}
+Password=${Password:-"foo123!"}
+
+
 ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
                                  -s "${SCRIPT_DIR}/embedded_server.sh" \
                                  -o "${SCRIPT_DIR}/../../build/aws/CouchbaseServer/" \
@@ -10,26 +47,16 @@ ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
                                  -i "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" \
                                  -t "server"
 
-STACK_NAME=$1
 TEMPLATE_BODY="file://${SCRIPT_DIR}/../../build/aws/CouchbaseServer/aws-cb-server.template"
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
-REGION=$(aws configure get region)
-echo "$REGION"
-if [ -z "$REGION" ]; then
-    REGION="us-east-1"
-fi
-Username="couchbase"
-Password="foo123!"
-KeyName="couchbase-${REGION}"
+
+
 #KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
-ServerInstanceCountDefault=$(jq '.Parameters.ServerInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
-ServerInstanceCount=${2:-$ServerInstanceCountDefault}
+
 echo "Instance Count: $ServerInstanceCount"
 echo "Default: $ServerInstanceCountDefault"
-ServerVersionDefault=$(jq '.Parameters.ServerVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
-ServerVersion=${3:-$ServerVersionDefault}
 echo "GatewayVersion: $ServerVersion"
 echo "Default: $ServerVersionDefault"
 
@@ -45,8 +72,8 @@ aws cloudformation create-stack \
 --stack-name "${STACK_NAME}" \
 --region "${REGION}" \
 --parameters \
-ParameterKey=Username,ParameterValue=${Username} \
-ParameterKey=Password,ParameterValue=${Password} \
+ParameterKey=Username,ParameterValue="${Username}" \
+ParameterKey=Password,ParameterValue="${Password}" \
 ParameterKey=KeyName,ParameterValue="${KeyName}" \
 ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
 ParameterKey=ServerInstanceCount,ParameterValue="${ServerInstanceCount}" \

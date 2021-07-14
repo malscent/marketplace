@@ -2,7 +2,40 @@
 
 set -eu
 
+function __generate_random_string() {
+    NEW_UUID=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c 10 ; echo '')
+    echo "${NEW_UUID}"
+}
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+STACK_NAME_DEFAULT="cb_test_stack_$(__generate_random_string)"
+SyncGatewayInstanceCountDefault=$(jq '.Parameters.SyncGatewayInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+SyncGatewayVersionDefault=$(jq '.Parameters.SyncGatewayVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+DefaultRegion=$(aws configure get region)
+KeyNameDefault="couchbase-${DefaultRegion}"
+
+while getopts n:c:v:u:b:d:k:r: flag
+do
+    case "${flag}" in
+        n) STACK_NAME=${OPTARG:-$STACK_NAME_DEFAULT};;
+        c) SyncGatewayInstanceCount=${OPTARG:-$SyncGatewayInstanceCountDefault};;
+        v) SyncGatewayVersion=${OPTARG};;
+        u) CouchbaseClusterURL=${OPTARG};;
+        b) BucketName=${OPTARG};;
+        d) DatabaseName=${OPTARG};;
+        k) KeyName=${OPTARG};;
+        r) REGION=${OPTARG};;
+        *) exit 1;;
+    esac
+done
+
+STACK_NAME=${STACK_NAME:-$STACK_NAME_DEFAULT}
+SyncGatewayInstanceCount=${SyncGatewayInstanceCount:-$SyncGatewayInstanceCountDefault}
+SyncGatewayVersion=${SyncGatewayVersion:-$SyncGatewayVersionDefault}
+REGION=${REGION:-$DefaultRegion}
+KeyName=${KeyName:-$KeyNameDefault}
+
 echo "Before Make Archives : $SCRIPT_DIR"
 ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
                                  -s "${SCRIPT_DIR}/embedded_gateway.sh" \
@@ -10,35 +43,24 @@ ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
                                  -n "aws-cb-syncgateway.template" \
                                  -i "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" \
                                  -t "sync_gateway"
-STACK_NAME=$1
 TEMPLATE_BODY="file://${SCRIPT_DIR}/../../build/aws/CouchbaseSyncGateway/aws-cb-syncgateway.template"
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
-REGION=$(aws configure get region)
 echo "$REGION"
 if [ -z "$REGION" ]; then
     REGION="us-east-1"
 fi
 Username="couchbase"
 Password="foo123!"
-KeyName="couchbase-${REGION}"
+
 #KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
-
-SyncGatewayInstanceCountDefault=$(jq '.Parameters.SyncGatewayInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
-SyncGatewayInstanceCount=${2:-$SyncGatewayInstanceCountDefault}
 
 echo "Instance Count: $SyncGatewayInstanceCount"
 echo "Default: $SyncGatewayInstanceCountDefault"
 
-SyncGatewayVersionDefault=$(jq '.Parameters.SyncGatewayVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
-SyncGatewayVersion=${3:-$SyncGatewayVersionDefault}
 echo "GatewayVersion: $SyncGatewayVersion"
 echo "Default: $SyncGatewayVersionDefault"
-
-CouchbaseClusterURL=${4:-}
-BucketName=${5:-}
-DatabaseName=${6:-}
 
 VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 #VpcName=vpc-0c1cd329084365f10

@@ -3,6 +3,7 @@
 const fs = require("fs"),
       readline = require("readline");
 const replacementRegex = /\$__\w*__/g
+const scriptURLReplacementRegex = /__SCRIPT_URL__/g
 
 async function processEmbeddedLines(file) {
     let lines = [];
@@ -14,6 +15,8 @@ async function processEmbeddedLines(file) {
     for await (const line of reader) {
         if (line.match(replacementRegex)) {
             lines.push(...performReplacement(line));
+        } else if (line.match(scriptURLReplacementRegex)) {
+            lines.push(swapInScriptUrl(line));
         } else {
             lines.push(line + "\n");
         }
@@ -25,6 +28,10 @@ async function processEmbeddedLines(file) {
         }
     }
     return userData
+}
+
+function swapInScriptUrl(line) {
+    return line.replace(scriptURLReplacementRegex, script_url) + "\n"
 }
 
 function performReplacement(line) {
@@ -64,7 +71,7 @@ if (!args[1] || args[1] == "" || !fs.existsSync(args[1])) {
 const mapping = JSON.parse(fs.readFileSync(args[1], "utf-8"));
 template.Mappings = mapping;
 
-if (!args[2] || args[2] == "" || !fs.existsSync(args[1])) {
+if (!args[2] || args[2] == "" || !fs.existsSync(args[2])) {
     console.error("You must specify the shell file to use.");
     process.exit(1); 
 }
@@ -73,6 +80,13 @@ templatetype="Server"
 if (args[3] && args[3] != "" && args[3] == "sync_gateway") {
     templatetype = "SyncGateway" 
 }
+
+if (args[4] && args[4] != "" && !fs.existsSync(args[4])) {
+    console.error("You must specify the location of the script_url.txt file.")
+    process.exit(1)
+}
+
+const script_url = fs.readFileSync(args[4], "utf-8")
 
 processEmbeddedLines(args[2]).then(x => {
     if (templatetype == "Server") {

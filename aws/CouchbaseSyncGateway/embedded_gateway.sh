@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -x
 echo 'Running startup script...'
 # There is a race condition based on when the env vars are set by profile.d and when cloud-init executes
 # this just removes that race condition
@@ -53,6 +53,7 @@ fi
 SUCCESS=1
 
 if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
+   # expecting this to error if not running.  if we use set -e that will kill the script
    curl -q http://127.0.0.1:4985/_admin/ &> /dev/null
    RUNNING=$? 
    if [[ "$RUNNING" == "0" ]]; then
