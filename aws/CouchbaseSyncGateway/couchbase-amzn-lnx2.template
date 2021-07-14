@@ -353,12 +353,29 @@
                                         "ec2:CreateTags",
                                         "ec2:DescribeTags",
                                         "ec2:DescribeInstances",
-                                        "autoscaling:DescribeAutoScalingGroups",
-                                        "ssm:GetParameter",
-                                        "secretsmanager:GetSecretValue"
+                                        "autoscaling:DescribeAutoScalingGroups"
                                     ],
                                     "Resource": [
                                         "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "CouchbaseSecretPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "secretsmanager:GetSecretValue"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Ref": "CouchbaseSecret"
+                                        }
                                     ]
                                 }
                             ]

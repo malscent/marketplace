@@ -53,7 +53,7 @@ fi
 SUCCESS=1
 
 if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
-   curl -q http://127.0.0.1:4985/_admin/ >> /dev/null 2>&1
+   curl -q http://127.0.0.1:4985/_admin/ &> /dev/null
    RUNNING=$? 
    if [[ "$RUNNING" == "0" ]]; then
       SUCCESS=0
@@ -86,8 +86,8 @@ if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
   }
 }      
       " > /opt/sync_gateway/etc/sync_gateway.json
-      nohup /usr/bin/sh /setup/postinstall.sh 0 >> /dev/null 2>&1 &
-      nohup /usr/bin/sh /setup/posttransaction.sh >> /dev/null 2>&1 & 
+      nohup /usr/bin/sh /setup/postinstall.sh 0 &> /dev/null &
+      nohup /usr/bin/sh /setup/posttransaction.sh &> /dev/null & 
       SUCCESS=$?
    fi
 else

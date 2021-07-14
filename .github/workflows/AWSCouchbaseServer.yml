@@ -58,7 +58,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'us-east-1'
           AWS_REGION: 'us-east-1'
-        - name: Deploy To AWS
+      - name: Deploy To AWS
         timeout-minutes: 15
         run: |
             bash ${GITHUB_WORKSPACE}/aws/CouchbaseServer/deploy.sh "cb-server-non-defaults-${GITHUB_SHA::6}" 3 6.6.0

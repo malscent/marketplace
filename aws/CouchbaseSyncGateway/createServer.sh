@@ -49,9 +49,12 @@ PUBLIC_IP=$(aws ec2 describe-instances --instance-id "$INSTANCE_ID" | jq -r '.Re
 echo "$PUBLIC_IP"
 instanceState=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --output json | jq -r '.Reservations[] | .Instances[] | .State.Name')
 
+# wait until the instance state reaches running
 until [[ "$instanceState" == "running" ]]; do
     sleep 5
     instanceState=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --output json | jq -r '.Reservations[] | .Instances[] | .State.Name')
 done
-sleep 60
-
+# wait until the couchbase server is responsive
+until curl -q "http://$PUBLIC_IP:8091" &> /dev/null; do
+    sleep 1
+done
