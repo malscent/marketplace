@@ -40,7 +40,7 @@ chmod 400 "$HOME/.ssh/aws-keypair.pem"
 
 SECURITY_GROUP=aws-ami-creation
 
-SERVER_STARTUP=$(sed -e "s~__USERNAME__~$USERNAME~g" ./server_user_data.sh | sed -e "s~__PASSWORD__~$PASSWORD~g" | base64)
+SERVER_STARTUP=$(sed -e "s~__USERNAME__~$USERNAME~g" "$SCRIPT_DIR/server_user_data.sh" | sed -e "s~__PASSWORD__~$PASSWORD~g" | base64)
 
 AWS_RESPONSE=$(aws ec2 run-instances \
     --image-id "$BASE_AMI_ID" \
