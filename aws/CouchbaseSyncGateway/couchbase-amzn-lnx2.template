@@ -287,17 +287,7 @@
         "GatewayLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties": {
-                "LoadBalancerName": {
-                    "Fn::Join": [
-                        "",
-                        [
-                            {
-                                "Ref": "AWS::StackName"
-                            },
-                            "-lb"
-                        ]
-                    ]
-                },
+                "LoadBalancerName":"cb-sync-gateway-lb",
                 "Subnets": {
                     "Ref": "SubnetList"
                 },
