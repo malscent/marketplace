@@ -2,6 +2,14 @@
 
 set -x
 echo "Beginning"
+# There is a race condition based on when the env vars are set by profile.d and when cloud-init executes
+# this just removes that race condition
+if [[ -r /etc/profile.d/couchbaseserver.sh ]]; then
+   # Disabling lint for unreachable source file
+   # shellcheck disable=SC1091
+   source /etc/profile.d/couchbaseserver.sh
+fi
+
 yum install jq aws-cfn-bootstrap -y -q
 #These values will be replaced with appropriate values during compilation into the Cloud Formation Template
 #To run directly, simply set values prior to executing script.  Any variable with $__ prefix and __ suffix will
@@ -88,9 +96,10 @@ SUCCESS=1
 
 if [[ "$COUCHBASE_SERVER_VERSION" == "$VERSION" ]]; then
    CLUSTER_MEMBERSHIP=$(curl -q -u "$CB_USERNAME:$CB_PASSWORD" http://127.0.0.1:8091/pools/default | jq -r '') || CLUSTER_MEMBERSHIP="unknown pool"
-   if [[ "$CLUSTER_MEMBERSHIP" != "unknown pool" ]]; then
+   if [[ "$CLUSTER_MEMBERSHIP" != "unknown pool" ]] && curl -q -u "$CB_USERNAME:$CB_PASSWORD" http://127.0.0.1:8091/pools/default; then
       SUCCESS=0
    else
+      export CLI_INSTALL_LOCATION=${COUCHBASE_HOME:-/opt/couchbase/bin/}
       bash /setup/postinstall.sh 0
       bash /setup/posttransaction.sh 
       bash /setup/couchbase_installer.sh -ch "$CLUSTER_HOST" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -s -c -d --cluster-only

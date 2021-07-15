@@ -34,7 +34,7 @@ SECURITY_GROUP=aws-ami-creation
 VERSION=6.6.2
 GATEWAY=0
 
-while getopts r:n:v:g: flag
+while getopts gr:n:v: flag
 do
     case "${flag}" in
         r) REGION=${OPTARG};;

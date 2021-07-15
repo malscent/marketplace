@@ -5,18 +5,52 @@
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
                 {
-                    "Label": { "default": "Network Configuration/Access" },
-                    "Parameters": ["VpcName", "SubnetList", "SSHCIDR", "KeyName"]
+                    "Label": {
+                        "default": "Network Configuration/Access"
+                    },
+                    "Parameters": [
+                        "VpcName",
+                        "SubnetList",
+                        "SSHCIDR",
+                        "KeyName"
+                    ]
                 },
                 {
-                    "Label": { "default": "Sync Gateway Configuration" },
-                    "Parameters": ["SyncGatewayInstanceCount", "SyncGatewayVersion", "SyncGatewayInstanceType", "Username", "Password"]
+                    "Label": {
+                        "default": "Sync Gateway Configuration"
+                    },
+                    "Parameters": [
+                        "SyncGatewayInstanceCount",
+                        "SyncGatewayVersion",
+                        "SyncGatewayInstanceType"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Couchbase Server Configuration"
+                    },
+                    "Parameters": [
+                        "CouchbaseClusterUrl",
+                        "Username",
+                        "Password",
+                        "Bucket",
+                        "DatabaseName"
+                    ]
                 }
             ],
             "ParameterLabels": {
-                "SSHCIDR": { "default": "Access CIDR" },
-                "Username": { "default": "Database Username"},
-                "Password": { "default": "Database Password"}
+                "SSHCIDR": {
+                    "default": "Access CIDR"
+                },
+                "Username": {
+                    "default": "Couchbase Username"
+                },
+                "Password": {
+                    "default": "Couchbase Password"
+                },
+                "CouchbaseClusterUrl": {
+                    "default": "Couchbase Cluster DNS or IP"
+                }
             }
         }
     },
@@ -25,7 +59,7 @@
         "SyncGatewayInstanceCount": {
             "Description": "Number of Couchbase Sync Gateway Nodes",
             "Type": "Number",
-            "Default": 0
+            "Default": 2
         },
         "SyncGatewayVersion": {
             "Description": "Couchbase Sync Gateway Version",
@@ -46,15 +80,13 @@
                 "2.1.0",
                 "2.0.0",
                 "2.0.2",
-                "2.0.3",
-                "1.5.1",
-                "1.5.2"
+                "2.0.3"
             ]
         },
         "SyncGatewayInstanceType": {
             "Description": "Instance type for Couchbase Sync Gateway Nodes",
             "Type": "String",
-            "Default": "m5.large",
+            "Default": "m5.xlarge",
             "AllowedValues": [
                 "c5n.xlarge",
                 "t3.medium",
@@ -85,6 +117,10 @@
                 "i3.xlarge"
             ]
         },
+        "CouchbaseClusterUrl": {
+            "Description": "IP or DNS Name for the Couchbase Cluster",
+            "Type": "String"
+        },
         "Username": {
             "Description": "Username for Couchbase administrator",
             "Type": "String"
@@ -93,6 +129,16 @@
             "Description": "Password for Couchbase administrator",
             "Type": "String",
             "NoEcho": true
+        },
+        "Bucket": {
+            "Description": "The couchbase bucket to use with the Sync Gateway Configuration",
+            "Type": "String",
+            "Default": "default"
+        },
+        "DatabaseName": {
+            "Description": "The name of the database in Sync Gateway Configuration",
+            "Type": "String",
+            "Default": "default"
         },
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair",
@@ -163,8 +209,8 @@
                         ]
                     }
                 },
-                "MinSize": "0",
-                "MaxSize": "100",
+                "MinSize": "1",
+                "MaxSize": "25",
                 "LoadBalancerNames": [
                     {
                         "Ref": "GatewayLoadBalancer"
@@ -184,7 +230,7 @@
                     },
                     "Timeout": "PT15M"
                 }
-              },
+            },
             "DependsOn": [
                 "CouchbaseSecret"
             ]
@@ -234,8 +280,7 @@
                             }
                         }
                     ],
-                    "UserData": {
-                    }
+                    "UserData": {}
                 }
             }
         },
@@ -250,11 +295,6 @@
                     {
                         "LoadBalancerPort": "4984",
                         "InstancePort": "4984",
-                        "Protocol": "HTTP"
-                    },
-                    {
-                        "LoadBalancerPort": "4985",
-                        "InstancePort": "4985",
                         "Protocol": "HTTP"
                     },
                     {
@@ -313,12 +353,29 @@
                                         "ec2:CreateTags",
                                         "ec2:DescribeTags",
                                         "ec2:DescribeInstances",
-                                        "autoscaling:DescribeAutoScalingGroups",
-                                        "ssm:GetParameter",
-                                        "secretsmanager:GetSecretValue"
+                                        "autoscaling:DescribeAutoScalingGroups"
                                     ],
                                     "Resource": [
                                         "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "CouchbaseSecretPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "secretsmanager:GetSecretValue"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Ref": "CouchbaseSecret"
+                                        }
                                     ]
                                 }
                             ]
@@ -358,15 +415,6 @@
                         "Description": "Couchbase Sync Gateway Port",
                         "FromPort": 4984,
                         "ToPort": 4984,
-                        "CidrIp": {
-                            "Ref": "SSHCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "Description": "Couchbase Sync Gateway Port",
-                        "FromPort": 4985,
-                        "ToPort": 4985,
                         "CidrIp": {
                             "Ref": "SSHCIDR"
                         }
