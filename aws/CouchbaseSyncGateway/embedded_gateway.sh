@@ -127,7 +127,7 @@ export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
   }
 }      
    " > /opt/sync_gateway/etc/sync_gateway.json
-   service sync_gateway restart
+   
 fi
 
 if [[ "$SUCCESS" == "0" ]]; then
