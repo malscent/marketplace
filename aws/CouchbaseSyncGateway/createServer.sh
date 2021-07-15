@@ -2,6 +2,8 @@
 
 set -eu
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 function __generate_random_string() {
     NEW_UUID=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c 10 ; echo '')
     echo "${NEW_UUID}"
@@ -27,7 +29,7 @@ PASSWORD=${PASSWORD:-"foo123!"}
 REGION=${REGION:-"us-east-1"}
 INSTANCE_TYPE=${INSTANCE_TYPE:-"m4.xlarge"}
 
-BASE_AMI_ID=$(jq --arg region "$REGION" -r '.CouchbaseServer[$region].AMI' ../CouchbaseServer/mappings.json)
+BASE_AMI_ID=$(jq --arg region "$REGION" -r '.CouchbaseServer[$region].AMI' "$SCRIPT_DIR/../CouchbaseServer/mappings.json")
 
 #Generate a SSH key for ssh into instance
 KEY_NAME="ami-creation-$(__generate_random_string)"
