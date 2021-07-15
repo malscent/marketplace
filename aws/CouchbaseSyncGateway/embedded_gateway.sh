@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -ex
 echo 'Running startup script...'
 # There is a race condition based on when the env vars are set by profile.d and when cloud-init executes
 # this just removes that race condition
@@ -54,11 +54,13 @@ SUCCESS=1
 
 if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
    # expecting this to error if not running.  if we use set -e that will kill the script
-   curl -q http://127.0.0.1:4985/_admin/ &> /dev/null
-   RUNNING=$? 
-   if [[ "$RUNNING" == "0" ]]; then
+   if curl -q http://127.0.0.1:4985/_admin/ &> /dev/null; then
       SUCCESS=0
    else
+      nohup /usr/bin/sh /setup/postinstall.sh 0 &> /dev/null &
+      nohup /usr/bin/sh /setup/posttransaction.sh &> /dev/null & 
+      SUCCESS=$?
+      mkdir -p /opt/sync_gateway/etc/
       echo "
 {
   \"logging\": {
@@ -87,9 +89,6 @@ if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
   }
 }      
       " > /opt/sync_gateway/etc/sync_gateway.json
-      nohup /usr/bin/sh /setup/postinstall.sh 0 &> /dev/null &
-      nohup /usr/bin/sh /setup/posttransaction.sh &> /dev/null & 
-      SUCCESS=$?
    fi
 else
    # Remove existing
@@ -98,6 +97,8 @@ else
    # Update /etc/profile.d/couchbaseserver.sh
     echo "#!/usr/bin/env sh
 export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
+   bash /setup/couchbase_installer.sh -ch "http://localhost:8091" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g
+   SUCCESS=$?
    echo "
 {
   \"logging\": {
@@ -126,8 +127,6 @@ export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
   }
 }      
    " > /opt/sync_gateway/etc/sync_gateway.json
-   bash /setup/couchbase_installer.sh -ch "http://localhost:8091" -u "$USERNAME" -p "$PASSWORD" -v "$VERSION" -os AMAZON -e AWS -c -d -g
-   SUCCESS=$?
    service sync_gateway restart
 fi
 

@@ -10,15 +10,22 @@ function __generate_random_string() {
 REGION="us-east-1"
 INSTANCE_TYPE=m4.xlarge
 
-while getopts r:t:i: flag
+while getopts r:t:i:u:p: flag
 do
     case "${flag}" in
         r) REGION=${OPTARG};;
         t) TAG=${OPTARG};;
         i) INSTANCE_TYPE=${OPTARG};;
+        u) USERNAME=${OPTARG};;
+        p) PASSWORD=${OPTARG};;
         *) exit 1;;
     esac
 done
+
+USERNAME=${USERNAME:-"couchbase"}
+PASSWORD=${PASSWORD:-"foo123!"}
+REGION=${REGION:-"us-east-1"}
+INSTANCE_TYPE=${INSTANCE_TYPE:-"m4.xlarge"}
 
 BASE_AMI_ID=$(jq --arg region "$REGION" -r '.CouchbaseServer[$region].AMI' ../CouchbaseServer/mappings.json)
 
@@ -31,7 +38,7 @@ chmod 400 "$HOME/.ssh/aws-keypair.pem"
 
 SECURITY_GROUP=aws-ami-creation
 
-SERVER_STARTUP=$(base64 ./server_user_data.sh)
+SERVER_STARTUP=$(sed -e "s~__USERNAME__~$USERNAME~g" ./server_user_data.sh | sed -e "s~__PASSWORD__~$PASSWORD~g" | base64)
 
 AWS_RESPONSE=$(aws ec2 run-instances \
     --image-id "$BASE_AMI_ID" \

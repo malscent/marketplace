@@ -14,30 +14,30 @@ echo "$DEFAULT_REGION"
 if [ -z "$DEFAULT_REGION" ]; then
     REGION="us-east-1"
 fi
-ServerInstanceCountDefault=$(jq '.Parameters.ServerInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
-ServerVersionDefault=$(jq '.Parameters.ServerVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+SERVER_INSTANCE_COUNT_DEFAULT=$(jq '.Parameters.ServerInstanceCount.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
+SERVER_VERSION_DEFAULT=$(jq '.Parameters.ServerVersion.Default' "${SCRIPT_DIR}/couchbase-amzn-lnx2.template" -r)
 
 while getopts n:c:v:k:r:u:p: flag
 do
     case "${flag}" in
         n) STACK_NAME=${OPTARG};;
-        c) ServerInstanceCount=${OPTARG};;
-        v) ServerVersion=${OPTARG};;
-        k) KeyName=${OPTARG};;
+        c) SERVER_INSTANCE_COUNT=${OPTARG};;
+        v) SERVER_VERSION=${OPTARG};;
+        k) KEY_NAME=${OPTARG};;
         r) REGION=${OPTARG};;
-        u) Username=${OPTARG};;
-        p) Password=${OPTARG};;
+        u) USERNAME=${OPTARG};;
+        p) PASSWORD=${OPTARG};;
         *) exit 1;;
     esac
 done
 
 REGION=${REGION:-$DEFAULT_REGION}
 STACK_NAME=${STACK_NAME:-$STACK_NAME_DEFAULT}
-ServerInstanceCount=${ServerInstanceCount:-$ServerInstanceCountDefault}
-ServerVersion=${ServerVersion:-$ServerVersionDefault}
-KeyName=${KeyName:-"couchbase-${REGION}"}
-Username=${Username:-"couchbase"}
-Password=${Password:-"foo123!"}
+SERVER_INSTANCE_COUNT=${SERVER_INSTANCE_COUNT:-$SERVER_INSTANCE_COUNT_DEFAULT}
+SERVER_VERSION=${SERVER_VERSION:-$SERVER_VERSION_DEFAULT}
+KEY_NAME=${KEY_NAME:-"couchbase-${REGION}"}
+USERNAME=${USERNAME:-"couchbase"}
+PASSWORD=${PASSWORD:-"foo123!"}
 
 
 ${SCRIPT_DIR}/../makeArchives.sh -m "${SCRIPT_DIR}/mappings.json" \
@@ -51,18 +51,16 @@ TEMPLATE_BODY="file://${SCRIPT_DIR}/../../build/aws/CouchbaseServer/aws-cb-serve
 echo "$TEMPLATE_BODY"
 #TEMPLATE_BODY="file://couchbase-$2.template"
 
-
-#KeyName="ja-test-kp"
 SSHCIDR="0.0.0.0/0"
 
-echo "Instance Count: $ServerInstanceCount"
-echo "Default: $ServerInstanceCountDefault"
-echo "GatewayVersion: $ServerVersion"
-echo "Default: $ServerVersionDefault"
+echo "Instance Count: $SERVER_INSTANCE_COUNT"
+echo "Default: $SERVER_INSTANCE_COUNT_DEFAULT"
+echo "GatewayVersion: $SERVER_VERSION"
+echo "Default: $SERVER_VERSION_DEFAULT"
 
-VpcName=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
+VPC_NAME=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 #VpcName=vpc-0c1cd329084365f10
-SubnetId=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VpcName}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
+SUBNET_ID=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VPC_NAME}" --max-items 1 --region "$REGION" | jq -r '.Subnets[].SubnetId')
 #SubnetId=subnet-08476a90d895839b4
 
 aws cloudformation create-stack \
@@ -72,34 +70,34 @@ aws cloudformation create-stack \
 --stack-name "${STACK_NAME}" \
 --region "${REGION}" \
 --parameters \
-ParameterKey=Username,ParameterValue="${Username}" \
-ParameterKey=Password,ParameterValue="${Password}" \
-ParameterKey=KeyName,ParameterValue="${KeyName}" \
+ParameterKey=Username,ParameterValue="${USERNAME}" \
+ParameterKey=Password,ParameterValue="${PASSWORD}" \
+ParameterKey=KeyName,ParameterValue="${KEY_NAME}" \
 ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
-ParameterKey=ServerInstanceCount,ParameterValue="${ServerInstanceCount}" \
-ParameterKey=ServerVersion,ParameterValue="${ServerVersion}" \
-ParameterKey=VpcName,ParameterValue="${VpcName}" \
-ParameterKey=SubnetList,ParameterValue="${SubnetId}"
+ParameterKey=ServerInstanceCount,ParameterValue="${SERVER_INSTANCE_COUNT}" \
+ParameterKey=ServerVersion,ParameterValue="${SERVER_VERSION}" \
+ParameterKey=VpcName,ParameterValue="${VPC_NAME}" \
+ParameterKey=SubnetList,ParameterValue="${SUBNET_ID}"
 
 
-Output=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
-Counter=0
+OUTPUT=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
+COUNTER=0
 
 printf "Waiting on Stack Creation to Complete ..."
-while [[ $Output != '"CREATE_COMPLETE"' && $Output != '"ROLLBACK_COMPLETE"' && $Counter -le 50 ]]
+while [[ $OUTPUT != '"CREATE_COMPLETE"' && $OUTPUT != '"ROLLBACK_COMPLETE"' && $COUNTER -le 50 ]]
 do
     printf "."
-    Output=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
-    (( Counter += 1 ))
+    OUTPUT=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
+    (( COUNTER += 1 ))
     sleep 10
 done
 
-if [[ $Output == '"CREATE_COMPLETE"' ]]; then
+if [[ $OUTPUT == '"CREATE_COMPLETE"' ]]; then
     printf "Complete!\n"
     exit 0
 fi
 
-if [[ $Output == '"ROLLBACK_COMPLETE"' || $Counter -ge 50 ]]; then
+if [[ $OUTPUT == '"ROLLBACK_COMPLETE"' || $COUNTER -ge 50 ]]; then
     printf "Failed!\n"
     exit 1
 fi
