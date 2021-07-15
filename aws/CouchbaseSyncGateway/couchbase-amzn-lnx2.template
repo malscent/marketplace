@@ -61,6 +61,18 @@
             "Type": "Number",
             "Default": 2
         },
+        "SyncGatewayDiskType": {
+            "Description": "Type of disk to use for the os volume",
+            "Type": "String",
+            "Default": "gp3",
+            "AllowedValues": [
+                "gp3",
+                "gp2",
+                "io1",
+                "st1",
+                "sc1"
+            ]
+        },
         "SyncGatewayVersion": {
             "Description": "Couchbase Sync Gateway Version",
             "Type": "String",
@@ -275,7 +287,7 @@
                         {
                             "DeviceName": "/dev/xvda",
                             "Ebs": {
-                                "VolumeType": "gp3",
+                                "VolumeType": { "Ref": "SyncGatewayDiskType" },
                                 "DeleteOnTermination": true
                             }
                         }
