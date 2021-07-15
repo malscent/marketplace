@@ -287,6 +287,17 @@
         "GatewayLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties": {
+                "LoadBalancerName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-LoadBalancer"
+                        ]
+                    ]
+                },
                 "Subnets": {
                     "Ref": "SubnetList"
                 },
@@ -309,7 +320,10 @@
                     "UnhealthyThreshold": "5",
                     "Interval": "30",
                     "Timeout": "5"
-                }
+                },
+                "SecurityGroups": [
+                    { "Ref": "SyncGatewaySecurityGroup" }
+                ]
             }
         },
         "CouchbaseInstanceProfile": {
