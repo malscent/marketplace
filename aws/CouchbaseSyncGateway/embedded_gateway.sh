@@ -65,7 +65,7 @@ if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
 {
   \"logging\": {
     \"console\": {
-      \"log_keys\": ["*"]
+      \"log_keys\": [\"*\"]
     }
   },
   \"databases\": {
@@ -103,7 +103,7 @@ export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
 {
   \"logging\": {
     \"console\": {
-      \"log_keys\": ["*"]
+      \"log_keys\": [\"*\"]
     }
   },
   \"databases\": {
