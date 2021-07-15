@@ -294,7 +294,7 @@
                             {
                                 "Ref": "AWS::StackName"
                             },
-                            "-LoadBalancer"
+                            "-lb"
                         ]
                     ]
                 },
