@@ -62,9 +62,9 @@ echo "Default: $SYNC_GATEWAY_VERSION_DEFAULT"
 
 VPC_NAME=$(aws ec2 describe-vpcs --filter "Name=isDefault,Values=true" | jq -r '.Vpcs[].VpcId')
 #VpcName=vpc-0c1cd329084365f10
-SUBNET_ID=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VPC_NAME}" --max-items 2 --region "$REGION" | jq -r '.Subnets[].SubnetId' | paste -s -d, - | sed s~,~//,~g)
+SUBNET_ID=$(aws ec2 describe-subnets --filter "Name=vpc-id,Values=${VPC_NAME}" --max-items 2 --region "$REGION" | jq -r '.Subnets[].SubnetId' | paste -s -d ',' - | sed 's~,~\\,~g' )
 #SubnetId=subnet-08476a90d895839b4
-
+echo "Subnets: $SUBNET_ID"
 aws cloudformation create-stack \
 --capabilities CAPABILITY_IAM \
 --disable-rollback \
