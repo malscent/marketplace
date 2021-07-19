@@ -1,0 +1,482 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This template deploys a VPC with a pair of private and public subnets in two availability zones.  If being used in a regional/local scenario, the first availability zone should be present in a regional availability zone and the second should be in the local zone",
+    "Parameters": {
+        "EnvironmentName": {
+            "Type": "String",
+            "Description": "The name of the network environment to be created."
+        },
+        "FirstAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select first availability zone to place the subnets. This zone should always be a regional availability zone."
+        },
+        "SecondAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select second availability zone to place the subnets (Local zone if using local zones)"
+        },
+        "ThirdAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select third availability zone to place the subnets (Local zone if using local zones)"
+        }
+    },
+    "Resources": {
+        "CouchbaseVPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "172.30.0.0/22",
+                "EnableDnsHostnames": true,
+                "EnableDnsSupport": true,
+                "InstanceTenancy": "default",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Ref": "EnvironmentName"
+                        }
+                    }
+                ]
+            }
+        },
+        "FirstCidrBlock": {
+            "Type": "AWS::EC2::VPCCidrBlock",
+            "Properties": {
+                "AmazonProvidedIpv6CidrBlock": true,
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "GatewayToInternet": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Ref": "EnvironmentName"
+                        }
+                    }
+                ]
+            }
+        },
+        "InternetGatewayAttachement": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "GatewayToInternet"
+                },
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "FirstPublicSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "DependsOn": "FirstCidrBlock",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "FirstAvailabilityZone"
+                },
+                "CidrBlock": "172.30.0.128/25",
+                "Ipv6CidrBlock": {
+                    "Fn::Select": [
+                        0,
+                        {
+                            "Fn::Cidr": [
+                                {
+                                    "Fn::Select": [
+                                        0,
+                                        {
+                                            "Fn::GetAtt": [
+                                                "CouchbaseVPC",
+                                                "Ipv6CidrBlocks"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                256,
+                                64
+                            ]
+                        }
+                    ]
+                },
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} First Public Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "SecondPublicSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "SecondAvailabilityZone"
+                },
+                "CidrBlock": "172.30.1.128/25",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Second Public Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "ThirdPublicSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "ThirdAvailabilityZone"
+                },
+                "CidrBlock": "172.30.2.128/25",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Third Public Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "FirstPrivateSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "DependsOn": "FirstCidrBlock",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "FirstAvailabilityZone"
+                },
+                "CidrBlock": "172.30.0.0/25",
+                "Ipv6CidrBlock": {
+                    "Fn::Select": [
+                        1,
+                        {
+                            "Fn::Cidr": [
+                                {
+                                    "Fn::Select": [
+                                        0,
+                                        {
+                                            "Fn::GetAtt": [
+                                                "CouchbaseVPC",
+                                                "Ipv6CidrBlocks"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                256,
+                                64
+                            ]
+                        }
+                    ]
+                },
+                "MapPublicIpOnLaunch": false,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} First Private Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "SecondPrivateSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "SecondAvailabilityZone"
+                },
+                "CidrBlock": "172.30.1.0/25",
+                "MapPublicIpOnLaunch": false,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Second Private Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "ThirdPrivateSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "ThirdAvailabilityZone"
+                },
+                "CidrBlock": "172.30.2.0/25",
+                "MapPublicIpOnLaunch": false,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Third Private Subnet"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                }
+            }
+        },
+        "FirstNatGatewayEIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachement",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "FirstPrivateNatGateway": {
+            "Type": "AWS::EC2::NatGateway",
+            "DependsOn": "FirstNatGatewayEIP",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "FirstPublicSubnet"
+                },
+                "AllocationId": {
+                    "Fn::GetAtt": [
+                        "FirstNatGatewayEIP",
+                        "AllocationId"
+                    ]
+                }
+            }
+        },
+        "CouchbasePublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Public Routes"
+                        }
+                    }
+                ]
+            }
+        },
+        "GatewayToInternetRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "CouchbasePublicRouteTable",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "CouchbasePublicRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "GatewayToInternet"
+                }
+            }
+        },
+        "FirstPublicRouteTableMapping": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "CouchbasePublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "FirstPublicSubnet"
+                }
+            }
+        },
+        "SecondPublicRouteTableMapping": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "CouchbasePublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "SecondPublicSubnet"
+                }
+            }
+        },
+        "ThirdPublicRouteTableMapping": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "CouchbasePublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "ThirdPublicSubnet"
+                }
+            }
+        },
+        "FirstPrivateRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} First Private Routes"
+                        }
+                    }
+                ]
+            }
+        },
+        "FirstPrivateRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "FirstPrivateRouteTable",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "FirstPrivateRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "FirstPrivateNatGateway"
+                }
+            }
+        },
+        "FirstSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "FirstPrivateRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "FirstPrivateSubnet"
+                }
+            }
+        },
+        "SecondPrivateRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Second Private Routes"
+                        }
+                    }
+                ]
+            }
+        },
+        "SecondPrivateRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "SecondPrivateRouteTable",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "SecondPrivateRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "FirstPrivateNatGateway"
+                }
+            }
+        },
+        "SecondSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "SecondPrivateRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "SecondPrivateSubnet"
+                }
+            }
+        },
+        "ThirdPrivateRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "CouchbaseVPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${EnvironmentName} Third Private Routes"
+                        }
+                    }
+                ]
+            }
+        },
+        "ThirdPrivateRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "SecondPrivateRouteTable",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ThirdPrivateRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "FirstPrivateNatGateway"
+                }
+            }
+        },
+        "ThirdSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ThirdPrivateRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "ThirdPrivateSubnet"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "CouchbaseVPC": {
+            "Description": "The VPC Created",
+            "Value": {
+                "Ref": "CouchbaseVPC"
+            }
+        },
+        "FirstPublicSubnet": {
+            "Description": "The First Public Subnet",
+            "Value": {
+                "Ref": "FirstPublicSubnet"
+            }
+        },
+        "FirstPrivateSubnet": {
+            "Description": "The First Private Subnet",
+            "Value": {
+                "Ref": "FirstPrivateSubnet"
+            }
+        },
+        "SecondPublicSubnet": {
+            "Description": "The Second Public Subnet",
+            "Value": {
+                "Ref": "SecondPublicSubnet"
+            }
+        },
+        "SecondPrivateSubnet": {
+            "Description": "The Second Private Subnet",
+            "Value": {
+                "Ref": "SecondPrivateSubnet"
+            }
+        }
+    }
+}

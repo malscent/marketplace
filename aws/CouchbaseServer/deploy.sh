@@ -77,7 +77,7 @@ ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
 ParameterKey=ServerInstanceCount,ParameterValue="${SERVER_INSTANCE_COUNT}" \
 ParameterKey=ServerVersion,ParameterValue="${SERVER_VERSION}" \
 ParameterKey=VpcName,ParameterValue="${VPC_NAME}" \
-ParameterKey=SubnetList,ParameterValue="${SUBNET_ID}"
+ParameterKey=Subnets,ParameterValue="${SUBNET_ID}"
 
 
 OUTPUT=$(aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" | jq '.StackEvents[] | select(.ResourceType == "AWS::CloudFormation::Stack") | . | select(.ResourceStatus == "CREATE_COMPLETE"  or .ResourceStatus == "ROLLBACK_COMPLETE") | .ResourceStatus ')
