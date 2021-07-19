@@ -22,7 +22,7 @@ VERSION=$__ServerVersion__
 # shellcheck disable=SC2154
 SECRET=$__CouchbaseSecret__
 
-region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
+region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 resource="ServerAutoScalingGroup"
 
