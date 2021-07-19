@@ -79,7 +79,7 @@ ParameterKey=SSHCIDR,ParameterValue=${SSHCIDR} \
 ParameterKey=SyncGatewayInstanceCount,ParameterValue="${SYNC_GATEWAY_INSTANCE_COUNT}" \
 ParameterKey=SyncGatewayVersion,ParameterValue="${SYNC_GATEWAY_VERSION}" \
 ParameterKey=VpcName,ParameterValue="${VPC_NAME}" \
-ParameterKey=SubnetList,ParameterValue="${SUBNET_ID}" \
+ParameterKey=Subnets,ParameterValue="${SUBNET_ID}" \
 ParameterKey=CouchbaseClusterUrl,ParameterValue="$COUCHBASE_CLUSTER_URL" \
 ParameterKey=Bucket,ParameterValue="$BUCKET_NAME" \
 ParameterKey=DatabaseName,ParameterValue="$DATABASE_NAME" 
