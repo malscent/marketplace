@@ -10,7 +10,7 @@
                     },
                     "Parameters": [
                         "VpcName",
-                        "SubnetList",
+                        "Subnets",
                         "SSHCIDR",
                         "KeyName"
                     ]
@@ -184,8 +184,8 @@
             "Type": "AWS::EC2::VPC::Id",
             "Description": "VPC Identifier"
         },
-        "SubnetList": {
-            "Description": "Subnet List (Note:  If you select a private subnet without egress to the internet, the template will fail to deploy correctly)",
+        "Subnets": {
+            "Description": "Subnets List (Note:  If you select a private subnet without egress to the internet, the template will fail to deploy correctly)",
             "Type": "List<AWS::EC2::Subnet::Id>"
         }
     },
@@ -243,7 +243,7 @@
                     "Ref": "ServerInstanceCount"
                 },
                 "VPCZoneIdentifier": {
-                    "Ref": "SubnetList"
+                    "Ref": "Subnets"
                 }
             },
             "CreationPolicy": {

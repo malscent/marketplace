@@ -10,7 +10,7 @@
                     },
                     "Parameters": [
                         "VpcName",
-                        "SubnetList",
+                        "Subnets",
                         "SSHCIDR",
                         "KeyName"
                     ]
@@ -168,7 +168,7 @@
             "Type": "AWS::EC2::VPC::Id",
             "Description": "VPC Identifier"
         },
-        "SubnetList": {
+        "Subnets": {
             "Description": "Subnet List (Note:  If you select a private subnet without egress to the internet, the template will fail to deploy correctly)",
             "Type": "List<AWS::EC2::Subnet::Id>"
         }
@@ -223,16 +223,19 @@
                 },
                 "MinSize": "1",
                 "MaxSize": "25",
-                "LoadBalancerNames": [
+                "TargetGroupARNs": [
                     {
-                        "Ref": "GatewayLoadBalancer"
+                        "Ref": "GatewayTarget4984Group"
+                    },
+                    {
+                        "Ref": "GatewayTarget4986Group"
                     }
                 ],
                 "DesiredCapacity": {
                     "Ref": "SyncGatewayInstanceCount"
                 },
                 "VPCZoneIdentifier": {
-                    "Ref": "SubnetList"
+                    "Ref": "Subnets"
                 }
             },
             "CreationPolicy": {
@@ -287,7 +290,9 @@
                         {
                             "DeviceName": "/dev/xvda",
                             "Ebs": {
-                                "VolumeType": { "Ref": "SyncGatewayDiskType" },
+                                "VolumeType": {
+                                    "Ref": "SyncGatewayDiskType"
+                                },
                                 "DeleteOnTermination": true
                             }
                         }
@@ -296,35 +301,104 @@
                 }
             }
         },
-        "GatewayLoadBalancer": {
-            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+        "GatewayLb4984Listener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
             "Properties": {
-                "LoadBalancerName":"cb-sync-gateway-lb",
-                "Subnets": {
-                    "Ref": "SubnetList"
+                "LoadBalancerArn": {
+                    "Ref": "GatewayLoadBalancer"
                 },
-                "CrossZone": true,
-                "Listeners": [
+                "Port": 4984,
+                "Protocol": "HTTP",
+                "DefaultActions": [
                     {
-                        "LoadBalancerPort": "4984",
-                        "InstancePort": "4984",
-                        "Protocol": "HTTP"
-                    },
-                    {
-                        "LoadBalancerPort": "4986",
-                        "InstancePort": "4986",
-                        "Protocol": "HTTP"
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "GatewayTarget4984Group"
+                        },
+                        "Order": 1
                     }
-                ],
-                "HealthCheck": {
-                    "Target": "HTTP:4984/",
-                    "HealthyThreshold": "3",
-                    "UnhealthyThreshold": "5",
-                    "Interval": "30",
-                    "Timeout": "5"
+                ]
+            }
+        },
+        "GatewayLb4986Listener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "LoadBalancerArn": {
+                    "Ref": "GatewayLoadBalancer"
                 },
+                "Port": 4986,
+                "Protocol": "HTTP",
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "GatewayTarget4986Group"
+                        },
+                        "Order": 1
+                    }
+                ]
+            }
+        },
+        "GatewayTarget4984Group": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckEnabled": true,
+                "HealthCheckIntervalSeconds": 30,
+                "HealthCheckPath": "/",
+                "HealthCheckPort": "4984",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 3,
+                "Port": 4984,
+                "Protocol": "HTTP",
+                "TargetType": "instance",
+                "Targets": [],
+                "UnhealthyThresholdCount": 5,
+                "VpcId": {
+                    "Ref": "VpcName"
+                },
+                "Matcher": {
+                    "HttpCode": "200-299"
+                }
+            }
+        },
+        "GatewayTarget4986Group": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckEnabled": true,
+                "HealthCheckIntervalSeconds": 30,
+                "HealthCheckPath": "/",
+                "HealthCheckPort": "4984",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 3,
+                "Port": 4986,
+                "Protocol": "HTTP",
+                "TargetType": "instance",
+                "Targets": [],
+                "UnhealthyThresholdCount": 5,
+                "VpcId": {
+                    "Ref": "VpcName"
+                },
+                "Matcher": {
+                    "HttpCode": "200-299"
+                }
+            }
+        },
+        "GatewayLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "IpAddressType": "ipv4",
+                "LoadBalancerAttributes": [],
+                "Scheme": "internet-facing",
+                "Subnets": {
+                    "Ref": "Subnets"
+                },
+                "Type": "application",
                 "SecurityGroups": [
-                    { "Ref": "SyncGatewaySecurityGroup" }
+                    {
+                        "Ref": "SyncGatewaySecurityGroup"
+                    }
                 ]
             }
         },

@@ -29,7 +29,7 @@ BUCKET=$__Bucket__
 
 resource="SyncGatewayAutoScalingGroup"
 
-region=$(ec2-metadata -z | cut -d " " -f 2 | sed 's/.$//')
+region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 
 SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id "${SECRET}" --version-stage AWSCURRENT --region "$region" | jq -r .SecretString)
@@ -63,6 +63,9 @@ if [[ "$COUCHBASE_GATEWAY_VERSION" == "$VERSION" ]]; then
       mkdir -p /opt/sync_gateway/etc/
       echo "
 {
+  \"interface\":\":4984\",
+  \"adminInterface\":\"127.0.0.1:4985\",
+  \"metricsInterface\":\":4986\",
   \"logging\": {
     \"console\": {
       \"log_keys\": [\"*\"]
@@ -101,6 +104,9 @@ export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
    SUCCESS=$?
    echo "
 {
+  \"interface\":\":4984\",
+  \"adminInterface\":\"127.0.0.1:4985\",
+  \"metricsInterface\":\":4986\",
   \"logging\": {
     \"console\": {
       \"log_keys\": [\"*\"]
