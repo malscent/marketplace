@@ -1,0 +1,398 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This template deploys a 3 AZ VPC with private/public subnets and installs couchbase server in the private subnets and sync gateway in the public subnets",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "VPC Configuration"
+                    },
+                    "Parameters":[
+                        "EnvironmentName",
+                        "FirstAvailabilityZone",
+                        "SecondAvailabilityZone",
+                        "ThirdAvailabilityZone",
+                        "KeyName",
+                        "SSHCIDR"
+                    ]
+                },{
+                    "Label": {
+                        "default": "Couchbase Server Configuration"
+                    },
+                    "Parameters":[
+                        "ServerVersion",
+                        "ServerInstanceCount",
+                        "InstanceType",
+                        "ServerDiskSize",
+                        "ServerDiskType",
+                        "Username",
+                        "Password"
+                    ]
+                },{
+                    "Label": {
+                        "default": "Sync Gateway Configuration"
+                    },
+                    "Parameters":[
+                        "SyncGatewayVersion",
+                        "SyncGatewayInstanceCount",
+                        "SyncGatewayInstanceType",
+                        "SyncGatewayDiskType"
+                    ]
+                }
+            ]
+        }
+    },
+    "Parameters": {
+        "EnvironmentName": {
+            "Type": "String",
+            "Description": "The name of the network environment to be created."
+        },
+        "FirstAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select first availability zone to place the subnets. This zone should always be a regional availability zone."
+        },
+        "SecondAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select second availability zone to place the subnets (Local zone if using local zones)"
+        },
+        "ThirdAvailabilityZone": {
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Description": "Select third availability zone to place the subnets (Local zone if using local zones)"
+        },
+        "ServerInstanceCount": {
+            "Description": "Number of Couchbase Server Nodes",
+            "Type": "Number",
+            "Default": 3
+        },
+        "ServerDiskSize": {
+            "Description": "Size in GB of the EBS gp2 volume on each Couchbase node",
+            "Type": "Number",
+            "Default": 100
+        },
+        "ServerDiskType": {
+            "Description": "Type of disk to use for the data volume",
+            "Type": "String",
+            "Default": "gp3",
+            "AllowedValues": [
+                "gp3",
+                "gp2",
+                "io1",
+                "st1",
+                "sc1"
+            ]
+        },
+        "ServerVersion": {
+            "Description": "Couchbase Server Version",
+            "Type": "String",
+            "Default": "6.6.2",
+            "AllowedValues": [
+                "6.6.2",
+                "6.6.1",
+                "6.6.0",
+                "6.5.1",
+                "6.5.0",
+                "6.0.4",
+                "6.0.3",
+                "6.0.2",
+                "6.0.1",
+                "6.0.0",
+                "7.0.0-beta"
+            ]
+        },
+        "InstanceType": {
+            "Description": "Instance type for Couchbase Nodes",
+            "Type": "String",
+            "Default": "m5.xlarge",
+            "AllowedValues": [
+                "c5n.xlarge",
+                "t3.medium",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "m4.16xlarge",
+                "m5.large",
+                "m5.xlarge",
+                "m5.2xlarge",
+                "m5.4xlarge",
+                "m5.8xlarge",
+                "m5.12xlarge",
+                "m5.16xlarge",
+                "m5a.large",
+                "m5a.xlarge",
+                "m5a.2xlarge",
+                "m5a.4xlarge",
+                "m5a.12xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "c4.8xlarge",
+                "c5.large",
+                "c5.xlarge",
+                "c5.2xlarge",
+                "c5.4xlarge",
+                "c5.9xlarge",
+                "c5d.large",
+                "c5d.xlarge",
+                "c5d.2xlarge",
+                "c5d.4xlarge",
+                "c5d.9xlarge",
+                "r4.large",
+                "r4.xlarge",
+                "r4.2xlarge",
+                "r4.4xlarge",
+                "r4.8xlarge",
+                "r4.16xlarge",
+                "r5.large",
+                "r5.xlarge",
+                "r5.2xlarge",
+                "r5.4xlarge",
+                "r5.8xlarge",
+                "r5.16xlarge",
+                "r5a.large",
+                "r5a.xlarge",
+                "r5a.2xlarge",
+                "r5a.4xlarge",
+                "r5a.8xlarge",
+                "r5a.12xlarge",
+                "r5a.16xlarge",
+                "r5ad.large",
+                "r5ad.xlarge",
+                "r5ad.2xlarge",
+                "r5ad.4xlarge",
+                "r5ad.8xlarge",
+                "r5ad.12xlarge",
+                "r5ad.16xlarge",
+                "i3.large",
+                "i3.xlarge",
+                "i3.2xlarge",
+                "i3.4xlarge",
+                "i3.8xlarge",
+                "i3.16xlarge"
+            ]
+        },
+        "Username": {
+            "Description": "Username for Couchbase administrator",
+            "Type": "String"
+        },
+        "Password": {
+            "Description": "Password for Couchbase administrator",
+            "Type": "String",
+            "NoEcho": true
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "SSHCIDR": {
+            "Description": "SSH CIDR",
+            "Type": "String",
+            "MinLength": 9,
+            "MaxLength": 18,
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
+        },
+        "SyncGatewayInstanceCount": {
+            "Description": "Number of Couchbase Sync Gateway Nodes",
+            "Type": "Number",
+            "Default": 2
+        },
+        "SyncGatewayDiskType": {
+            "Description": "Type of disk to use for the os volume",
+            "Type": "String",
+            "Default": "gp3",
+            "AllowedValues": [
+                "gp3",
+                "gp2",
+                "io1",
+                "st1",
+                "sc1"
+            ]
+        },
+        "SyncGatewayVersion": {
+            "Description": "Couchbase Sync Gateway Version",
+            "Type": "String",
+            "Default": "2.8.2",
+            "AllowedValues": [
+                "2.8.2",
+                "2.8.0",
+                "2.7.3",
+                "2.7.2",
+                "2.7.1",
+                "2.7.0",
+                "2.6.0",
+                "2.5.0",
+                "2.1.3",
+                "2.1.2",
+                "2.1.1",
+                "2.1.0",
+                "2.0.0",
+                "2.0.2",
+                "2.0.3"
+            ]
+        },
+        "SyncGatewayInstanceType": {
+            "Description": "Instance type for Couchbase Sync Gateway Nodes",
+            "Type": "String",
+            "Default": "m5.xlarge",
+            "AllowedValues": [
+                "c5n.xlarge",
+                "t3.medium",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m5.large",
+                "m5.xlarge",
+                "m5.2xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "c5.large",
+                "c5.xlarge",
+                "c5.2xlarge",
+                "c5.4xlarge",
+                "r5.large",
+                "r5.xlarge",
+                "r4.large",
+                "r4.xlarge",
+                "m5a.large",
+                "m5a.xlarge",
+                "m5a.2xlarge",
+                "r5a.large",
+                "r5a.xlarge",
+                "i3.large",
+                "i3.xlarge"
+            ]
+        }
+    },
+    "Resources": {
+        "Vpc": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "Parameters": {
+                    "EnvironmentName": {
+                        "Ref": "EnvironmentName"
+                    },
+                    "FirstAvailabilityZone": {
+                        "Ref": "FirstAvailabilityZone"
+                    },
+                    "ThirdAvailabilityZone": {
+                        "Ref": "ThirdAvailabilityZone"
+                    },
+                    "SecondAvailabilityZone": {
+                        "Ref": "SecondAvailabilityZone"
+                    }
+                },
+                "TemplateURL": "https://ja-bucket-cft-test.s3.us-west-2.amazonaws.com/couchbase-vpc-example.template",
+                "TimeoutInMinutes": 15
+            }
+        },
+        "Server": {
+            "Type": "AWS::CloudFormation::Stack",
+            "DependsOn": "Vpc",
+            "Properties": {
+                "Parameters": {
+                    "ServerInstanceCount": {
+                        "Ref": "ServerInstanceCount"
+                    },
+                    "ServerDiskSize": {
+                        "Ref": "ServerDiskSize"
+                    },
+                    "ServerDiskType": {
+                        "Ref": "ServerDiskType"
+                    },
+                    "ServerVersion": {
+                        "Ref": "ServerVersion"
+                    },
+                    "InstanceType": {
+                        "Ref": "InstanceType"
+                    },
+                    "Username": {
+                        "Ref": "Username"
+                    },
+                    "Password": {
+                        "Ref": "Password"
+                    },
+                    "KeyName": {
+                        "Ref": "KeyName"
+                    },
+                    "SSHCIDR": {
+                        "Ref": "SSHCIDR"
+                    },
+                    "VpcName": {
+                        "Fn::GetAtt": [
+                            "Vpc",
+                            "Outputs.CouchbaseVPC"
+                        ]
+                    },
+                    "Subnets": {
+                        "Fn::GetAtt": [
+                            "Vpc",
+                            "Outputs.PrivateSubnets"
+                        ]
+                    }
+                },
+                "TemplateURL": "https://ja-bucket-cft-test.s3.us-west-2.amazonaws.com/aws-cb-server.template",
+                "TimeoutInMinutes": 15
+            }
+        },
+        "Gateway": {
+            "Type": "AWS::CloudFormation::Stack",
+            "DependsOn": "Server",
+            "Properties": {
+                "Parameters": {
+                    "SyncGatewayInstanceCount": {
+                        "Ref": "SyncGatewayInstanceCount"
+                    },
+                    "SyncGatewayDiskType": {
+                        "Ref": "SyncGatewayDiskType"
+                    },
+                    "SyncGatewayVersion": {
+                        "Ref": "SyncGatewayVersion"
+                    },
+                    "SyncGatewayInstanceType": {
+                        "Ref": "SyncGatewayInstanceType"
+                    },
+                    "CouchbaseClusterUrl": {
+                        "Fn::GetAtt": [
+                            "Server",
+                            "Outputs.CouchbaseUrl"
+                        ]
+                    },
+                    "Username": {
+                        "Ref": "Username"
+                    },
+                    "Password": {
+                        "Ref": "Password"
+                    },
+                    "KeyName": {
+                        "Ref": "KeyName"
+                    },
+                    "SSHCIDR": {
+                        "Ref": "SSHCIDR"
+                    },
+                    "Bucket": "default",
+                    "DatabaseName": "default",
+                    "VpcName": {
+                        "Fn::GetAtt": [
+                            "Vpc",
+                            "Outputs.CouchbaseVPC"
+                        ]
+                    },
+                    "Subnets": {
+                        "Fn::GetAtt": [
+                            "Vpc",
+                            "Outputs.PublicSubnets"
+                        ]
+                    }
+                },
+                "TemplateURL": "https://ja-bucket-cft-test.s3.us-west-2.amazonaws.com/aws-cb-syncgateway.template",
+                "TimeoutInMinutes": 15
+            }
+        }
+    }
+}

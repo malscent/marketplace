@@ -21,7 +21,9 @@ stackName=$__AWSStackName__
 VERSION=$__ServerVersion__
 # shellcheck disable=SC2154
 SECRET=$__CouchbaseSecret__
-
+# shellcheck disable=SC2154
+SIGNAL_URL="$__RallyUrlWaitConditionHandler__"
+echo "$SIGNAL_URL"
 region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
 instanceId=$(ec2-metadata -i | cut -d " " -f 2)
 resource="ServerAutoScalingGroup"
@@ -75,6 +77,7 @@ echo "nodePublicDNS $nodePublicDNS"
 
 if [[ "${rallyPublicDNS}" == "${nodePublicDNS}" ]];
 then
+    curl -X PUT -H 'Content-Type:' --data-binary "{ \"Status\":\"SUCCESS\", \"Reason\":\"Complete\", \"UniqueId\":\"signal\", \"Data\":\"|$rallyPublicDNS|\"}" "$SIGNAL_URL"
     aws ec2 create-tags \
         --region "${region}" \
         --resources "${instanceId}" \

@@ -454,29 +454,13 @@
                 "Ref": "CouchbaseVPC"
             }
         },
-        "FirstPublicSubnet": {
-            "Description": "The First Public Subnet",
-            "Value": {
-                "Ref": "FirstPublicSubnet"
-            }
+        "PublicSubnets": {
+            "Description": "The list of public subnets",
+            "Value": {"Fn::Join": [",", [{ "Ref": "FirstPublicSubnet" }, { "Ref": "SecondPublicSubnet" }, { "Ref": "ThirdPublicSubnet" }]]}
         },
-        "FirstPrivateSubnet": {
-            "Description": "The First Private Subnet",
-            "Value": {
-                "Ref": "FirstPrivateSubnet"
-            }
-        },
-        "SecondPublicSubnet": {
-            "Description": "The Second Public Subnet",
-            "Value": {
-                "Ref": "SecondPublicSubnet"
-            }
-        },
-        "SecondPrivateSubnet": {
-            "Description": "The Second Private Subnet",
-            "Value": {
-                "Ref": "SecondPrivateSubnet"
-            }
+        "PrivateSubnets": {
+            "Description": "The list of private subnets",
+            "Value": {"Fn::Join":[",", [{ "Ref": "FirstPrivateSubnet" }, { "Ref": "SecondPrivateSubnet" }, { "Ref": "ThirdPrivateSubnet" }]]}
         }
     }
 }
