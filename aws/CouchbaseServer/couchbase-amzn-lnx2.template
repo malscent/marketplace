@@ -317,6 +317,17 @@
                 }
             }
         },
+        "RallyUrlWaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "Properties": {
+                "Handle": { "Ref": "RallyUrlWaitConditionHandler" },
+                "Timeout": "900"
+            }
+        },
+        "RallyUrlWaitConditionHandler": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle",
+            "Properties": {}
+        },
         "CouchbaseInstanceProfile": {
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {
@@ -508,5 +519,30 @@
                 ]
             }
         }
+    },
+    "Outputs": {
+        "CouchbaseUrl": {
+            "Description": "The url to access the server for sdks and sync gateway",
+            "Value": { 
+                "Fn::Sub": [
+                    "couchbase://${signal}", 
+                    {
+                        "signal":  {
+                            "Fn::Select": [ "1", {
+                                "Fn::Split": [
+                                    "|", {
+                                        "Fn::GetAtt": [
+                                            "RallyUrlWaitCondition", 
+                                            "Data"
+                                        ]
+                                    }
+                                ]}
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+        
     }
 }
