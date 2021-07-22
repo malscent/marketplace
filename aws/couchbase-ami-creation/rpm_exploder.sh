@@ -69,15 +69,23 @@ if [[ "$SYNC_GATEWAY" -gt 0 ]]; then
     echo "Preinstalling Gateway"
     echo "#!/usr/bin/env sh
     export COUCHBASE_GATEWAY_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
-    wget -O "/setup/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" \
-        "https://packages.couchbase.com/releases/couchbase-sync-gateway/${VERSION}/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" --quiet
+    if [[ ! -f "/home/ec2-user/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" ]]; then
+      wget -O "/setup/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" \
+          "https://packages.couchbase.com/releases/couchbase-sync-gateway/${VERSION}/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" --quiet
+    else
+      cp "/home/ec2-user/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm" "/setup/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm"
+    fi
     RPM="/setup/couchbase-sync-gateway-enterprise_${VERSION}_x86_64.rpm"
 else 
     echo "Preinstalling Server"
     echo "#!/usr/bin/env sh
     export COUCHBASE_SERVER_VERSION=$VERSION" > /etc/profile.d/couchbaseserver.sh
-    wget -O "/setup/couchbase-server-enterprise-$VERSION-amzn2.x86_64.rpm"  \
-        "https://packages.couchbase.com/releases/$VERSION/couchbase-server-enterprise-$VERSION-amzn2.x86_64.rpm" --quiet
+    if [[ ! -f "/home/ec2-user/couchbase-server-enterprise-${VERSION}-amzn2.x86_64.rpm" ]]; then
+      wget -O "/setup/couchbase-server-enterprise-$VERSION-amzn2.x86_64.rpm"  \
+          "https://packages.couchbase.com/releases/$VERSION/couchbase-server-enterprise-$VERSION-amzn2.x86_64.rpm" --quiet
+    else
+      cp "/home/ec2-user/couchbase-server-enterprise-${VERSION}-amzn2.x86_64.rpm" "/setup/couchbase-server-enterprise-${VERSION}-amzn2.x86_64.rpm"
+    fi
     RPM="/setup/couchbase-server-enterprise-$VERSION-amzn2.x86_64.rpm"
 fi
 
